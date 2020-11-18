@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 #include <gmp.h>
+#include "common.h"
 
 // Counting
 
@@ -24,5 +25,10 @@ inline mpz_t* bdoag_memo_get_ptr(const bdoag_memo memo, int n, int m, int k) {
 }
 
 mpz_t* bdoag_count(bdoag_memo, int n, int m, int k, int bound);
+
+// Random sampling
+
+randdag_t bdoag_unif_nm(gmp_randstate_t, const bdoag_memo, int n, int m, int bound);
+randdag_t bdoag_unif_m(gmp_randstate_t, const bdoag_memo, int m, int bound);
 
 #endif
