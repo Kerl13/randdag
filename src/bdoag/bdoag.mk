@@ -1,8 +1,9 @@
 # Command line utility
 $(BUILD)bdoag/bdoag: src/bdoag/cli.c
 $(BUILD)bdoag/bdoag: $(BUILD)libbdoag.a
+$(BUILD)bdoag/bdoag: $(BUILD)common/cli.o
 $(BUILD)bdoag/bdoag: src/cli/cli.h src/cli/cli.c
-	$(CC) $(CFLAGS) -L$(BUILD) -o $@ src/bdoag/cli.c src/cli/cli.c -lbdoag -lgmp
+	$(CC) $(CFLAGS) -L$(BUILD) -o $@ src/bdoag/cli.c $(BUILD)common/cli.o src/cli/cli.c -lbdoag -lgmp
 
 # Static library
 $(BUILD)libbdoag.a: $(BUILD)common/graphs.o

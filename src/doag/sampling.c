@@ -38,7 +38,7 @@ static void _add_src(gmp_randstate_t state,
   }
 }
 
-static void _unif_doag(gmp_randstate_t state, const memo memo, randdag_vertex* v, int n, int m, int k) {
+static void _unif_doag(gmp_randstate_t state, const doag_memo memo, randdag_vertex* v, int n, int m, int k) {
   v[0].id = n;
 
   // Base case: only one vertex: the sink.
@@ -90,13 +90,13 @@ static void _unif_doag(gmp_randstate_t state, const memo memo, randdag_vertex* v
   assert(0); // Shouldn't reach this point
 }
 
-randdag_t doag_unif_nm(gmp_randstate_t state, const memo memo, int n, int m) {
+randdag_t doag_unif_nm(gmp_randstate_t state, const doag_memo memo, int n, int m) {
   randdag_t g = randdag_alloc(n);
   _unif_doag(state, memo, g.v, n, m, 1);
   return g;
 }
 
-randdag_t doag_unif_m(gmp_randstate_t state, const memo memo, int m) {
+randdag_t doag_unif_m(gmp_randstate_t state, const doag_memo memo, int m) {
   mpz_t r, tot;
   mpz_inits(r, tot, NULL);
 

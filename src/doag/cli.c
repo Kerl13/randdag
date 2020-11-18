@@ -9,46 +9,18 @@
 #include "../../includes/doag.h"
 #include "../cli/cli.h"
 
-// ---------------------------------------------- //
-// CLI                                            //
-// ---------------------------------------------- //
+doag_memo memo;
+int M;
 
-static int sample(char* sample_file, const memo memo, int M) {
-  // Setup output file
-  FILE* fd = stdout;
-  if (strcmp("-", sample_file) != 0)
-    fd = fopen(sample_file, "w");
-  if (fd == NULL) {
-    fprintf(stderr, "Cannot open file: %s\n", sample_file);
-    return 1;
-  }
-
-  // Prepare RNG
-  gmp_randstate_t state;
-  gmp_randinit_mt(state);
-  unsigned long int seed;
-  getrandom(&seed, sizeof(unsigned long int), 0);
-  printf("Using random seed 0x%lx\n", seed);
-  gmp_randseed_ui(state, seed);
-
-  // Sample
-  randdag_t g = doag_unif_m(state, memo, M);
-  randdag_to_dot(fd, g);
-  fflush(fd);
-
-  // Do some cleaning
-  if (fd != stdout) fclose(fd);
-  randdag_free(g);
-  gmp_randclear(state);
-
-  return 0;
+// Alias of type __sampler_t of the sampling function for use in the generic
+// sampler.
+randdag_t doag_sampler(gmp_randstate_t state) {
+  return doag_unif_m(state, memo, M);
 }
 
 int main(int argc, char* argv[]) {
   randdag_cli_options opts = randdag_cli_parse(30, argc, argv);
-
-  int M = opts.count;
-  memo memo;
+  M = opts.count;
 
   // Alloc memo and load
 
@@ -102,7 +74,7 @@ int main(int argc, char* argv[]) {
   // Random sampling
 
   if (opts.sample_file != NULL) {
-    int r = sample(opts.sample_file, memo, M);
+    int r = generic_sampler(opts.sample_file, doag_sampler);
     if (r != 0) return r;
   }
 

@@ -11,7 +11,7 @@ static inline int min(int x, int y) { return x < y ? x : y; }
 
 // Memoization
 
-memo doag_memo_alloc(int N, int M) {
+doag_memo doag_memo_alloc(int N, int M) {
   mpz_t*** vals = calloc(N - 1, sizeof(mpz_t**));
 
   for (int n = 2; n <= N; n++) {
@@ -27,13 +27,13 @@ memo doag_memo_alloc(int N, int M) {
     }
   }
 
-  memo m = {.N = N, .M = M, .vals = vals};
+  doag_memo m = {.N = N, .M = M, .vals = vals};
   m.one = malloc(sizeof(mpz_t));
   mpz_init_set_ui(*m.one, 1);
   return m;
 }
 
-void doag_memo_free(memo memo) {
+void doag_memo_free(doag_memo memo) {
   for (int n = 2; n <= memo.N; n++) {
     for (int k = 1; k < n; k++) {
       const int max_m = min((n - k) * (n - k - 1) / 2 + k * (n - k), memo.M);
@@ -49,7 +49,7 @@ void doag_memo_free(memo memo) {
   free(memo.one);
 }
 
-void doag_memo_dump(FILE* fd, const memo memo) {
+void doag_memo_dump(FILE* fd, const doag_memo memo) {
   fprintf(fd, "%d %d\n", memo.N, memo.M);
   for (int n = 2; n <= memo.N; n++) {
     for (int k = 1; k < n; k++) {
@@ -66,7 +66,7 @@ void doag_memo_dump(FILE* fd, const memo memo) {
   }
 }
 
-void doag_memo_load(memo memo, FILE* fd) {
+void doag_memo_load(doag_memo memo, FILE* fd) {
   int n, m, k;
 
   while (1) {
@@ -79,7 +79,7 @@ void doag_memo_load(memo memo, FILE* fd) {
 
 // Counting
 
-mpz_t* doag_count(memo memo, int n, int m, int k) {
+mpz_t* doag_count(doag_memo memo, int n, int m, int k) {
   // assert(k >= 1);
   // assert(n == 1 || k < n);
   // assert(n - 1 <= m);

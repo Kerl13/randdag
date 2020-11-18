@@ -5,50 +5,27 @@
 #include <assert.h>
 #include <gmp.h>
 
+#include "../../includes/common.h"
 #include "../../includes/bdoag.h"
 #include "../cli/cli.h"
 
 static inline int min(int x, int y) { return x < y ? x : y; }
 static inline int max(int x, int y) { return x < y ? y : x; }
 
-static int sample(char* sample_file, const bdoag_memo memo, int M, int bound) {
-  // Setup output file
-  FILE* fd = stdout;
-  if (strcmp("-", sample_file) != 0)
-    fd = fopen(sample_file, "w");
-  if (fd == NULL) {
-    fprintf(stderr, "Cannot open file: %s\n", sample_file);
-    return 1;
-  }
+bdoag_memo memo;
+int bound = 2; // TODO: make this a cmd line argument.
+int M;
 
-  // Prepare RNG
-  gmp_randstate_t state;
-  gmp_randinit_mt(state);
-  unsigned long int seed;
-  getrandom(&seed, sizeof(unsigned long int), 0);
-  printf("Using random seed 0x%lx\n", seed);
-  gmp_randseed_ui(state, seed);
-
-  // Sample
-  randdag_t g = bdoag_unif_m(state, memo, M, bound);
-  randdag_to_dot(fd, g);
-  fflush(fd);
-
-  // Do some cleaning
-  if (fd != stdout) fclose(fd);
-  randdag_free(g);
-  gmp_randclear(state);
-
-  return 0;
+// Alias of type __sampler_t of the sampling function for use in the generic
+// sampler.
+randdag_t bdoag_sampler(gmp_randstate_t state) {
+  return bdoag_unif_m(state, memo, M, bound);
 }
 
 int main(int argc, char* argv[]) {
   randdag_cli_options opts = randdag_cli_parse(30, argc, argv);
+  M = opts.count;
 
-  int bound = 2; // Make this a cmd line arg
-  int M = opts.count;
-  bdoag_memo memo;
-  
   // Alloc memo and load
 
   if (opts.load_file) {
@@ -100,7 +77,7 @@ int main(int argc, char* argv[]) {
   // Random sampling
 
   if (opts.sample_file != NULL) {
-    int r = sample(opts.sample_file, memo, M, bound);
+    int r = generic_sampler(opts.sample_file, bdoag_sampler);
     if (r != 0) return r;
   }
 
