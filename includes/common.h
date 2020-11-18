@@ -22,8 +22,12 @@ void randdag_free(randdag_t);
 void randdag_to_dot(FILE*, const randdag_t);
 
 // Generic command line stuff
+// TODO: do not include this in the static libraries
 
 typedef randdag_t (*__sampler_t)(gmp_randstate_t);
+typedef mpz_t* (*__counter_t)(int n, int m);
+
 int generic_sampler(const char* filename, __sampler_t);
+void generic_counter(__counter_t, int M);
 
 #endif

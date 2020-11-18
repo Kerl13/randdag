@@ -12,6 +12,7 @@
 static inline int min(int x, int y) { return x < y ? x : y; }
 static inline int max(int x, int y) { return x < y ? y : x; }
 
+mpz_t zero;
 bdoag_memo memo;
 int bound = 2; // TODO: make this a cmd line argument.
 int M;
@@ -20,6 +21,16 @@ int M;
 // sampler.
 randdag_t bdoag_sampler(gmp_randstate_t state) {
   return bdoag_unif_m(state, memo, M, bound);
+}
+
+// Alias of type __counter_t of the counting function for use in the generic
+// counter.
+mpz_t* bdoag_counter(int n, int m) {
+  const int C = min(bound, n - 1);
+  if (m <= (C + 1) * C / 2 +  (n - 1 - C) * bound)
+    return bdoag_count(memo, n, m, 1, bound);
+  else
+    return &zero;
 }
 
 int main(int argc, char* argv[]) {
@@ -46,21 +57,7 @@ int main(int argc, char* argv[]) {
   }
 
   // Counting
-
-  mpz_t res; mpz_init(res);
-  for (int m = 1; m <= M; m++) {
-    mpz_set_ui(res, 0);
-    for (int n = 2; n <= m + 1; n++) {
-      const int C = min(bound, n - 1);
-      if (m <= (C + 1) * C / 2 +  (n - 1 - C) * bound)
-        mpz_add(res, res, *bdoag_count(memo, n, m, 1, bound));
-    }
-    printf("%d: ", m);
-    mpz_out_str(stdout, 10, res);
-    printf("\n");
-    fflush(stdout);
-  }
-  mpz_clear(res);
+  generic_counter(bdoag_counter, M);
 
   // Dump
 
@@ -75,14 +72,12 @@ int main(int argc, char* argv[]) {
   }
 
   // Random sampling
-
   if (opts.sample_file != NULL) {
     int r = generic_sampler(opts.sample_file, bdoag_sampler);
     if (r != 0) return r;
   }
 
   // Some cleaning
-
   bdoag_memo_free(memo);
 
   return 0;

@@ -9,6 +9,7 @@
 #include "../../includes/doag.h"
 #include "../cli/cli.h"
 
+mpz_t zero;
 doag_memo memo;
 int M;
 
@@ -18,7 +19,16 @@ randdag_t doag_sampler(gmp_randstate_t state) {
   return doag_unif_m(state, memo, M);
 }
 
+// Alias of type __counter_t of the sampling function for use in the generic
+// counter.
+
+mpz_t* doag_counter(int n, int m) {
+  if (m <= n * (n - 1) / 2) return doag_count(memo, n, m, 1);
+  else return &zero;
+}
+
 int main(int argc, char* argv[]) {
+  mpz_init(zero);
   randdag_cli_options opts = randdag_cli_parse(30, argc, argv);
   M = opts.count;
 
@@ -44,20 +54,7 @@ int main(int argc, char* argv[]) {
   }
 
   // Counting
-
-  mpz_t res; mpz_init(res);
-  for (int m = 1; m <= M; m++) {
-    mpz_set_ui(res, 0);
-    for (int n = 2; n <= m + 1; n++) {
-      if (m <= n * (n - 1) / 2)
-        mpz_add(res, res, *doag_count(memo, n, m, 1));
-    }
-    printf("%d: ", m);
-    mpz_out_str(stdout, 10, res);
-    printf("\n");
-    fflush(stdout);
-  }
-  mpz_clear(res);
+  generic_counter(doag_counter, M);
 
   // Dump
 
@@ -72,15 +69,14 @@ int main(int argc, char* argv[]) {
   }
 
   // Random sampling
-
   if (opts.sample_file != NULL) {
     int r = generic_sampler(opts.sample_file, doag_sampler);
     if (r != 0) return r;
   }
 
   // Some cleaning
-
   doag_memo_free(memo);
+  mpz_clear(zero);
 
   return 0;
 }
