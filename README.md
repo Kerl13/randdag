@@ -7,7 +7,7 @@ C library for the counting and uniform generation of various models of DAGs
 
 Run `make`.
 
-For each DAG model, this will produce in `build/$MODEL_NAME/` a static library
+For each DAG model, this will produce in the `build/` folder a static library
 and an executable providing a command line interface to the counting and
 sampling functions.
 
