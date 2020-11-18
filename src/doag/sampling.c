@@ -77,7 +77,7 @@ static void _unif_doag(gmp_randstate_t state, const memo memo, doag_vertex* v, i
           _unif_doag(state, memo, v + 1, n - 1, m - p, k - 1 + q);
           _add_src(state, v, v + k + q, n - k - q, s, q);
           mpz_clear(r);
-          mpz_init(factor);
+          mpz_clear(factor);
           return;
         }
       }

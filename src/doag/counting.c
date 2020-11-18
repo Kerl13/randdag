@@ -45,6 +45,7 @@ void doag_memo_free(memo memo) {
     free(memo.vals[n - 2]);
   }
   free(memo.vals);
+  mpz_clear(*memo.one);
   free(memo.one);
 }
 

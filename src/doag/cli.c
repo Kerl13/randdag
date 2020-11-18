@@ -38,6 +38,7 @@ static int sample(char* sample_file, const memo memo, int M) {
   // Do some cleaning
   if (fd != stdout) fclose(fd);
   doag_free(g);
+  gmp_randclear(state);
 
   return 0;
 }
