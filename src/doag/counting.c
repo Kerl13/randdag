@@ -65,11 +65,7 @@ void doag_memo_dump(FILE* fd, const memo memo) {
   }
 }
 
-memo doag_memo_load(FILE* fd) {
-  int N, M;
-  fscanf(fd, "%d %d\n", &N, &M);
-  memo memo = doag_memo_alloc(N, M);
-
+void doag_memo_load(memo memo, FILE* fd) {
   int n, m, k;
 
   while (1) {
@@ -78,8 +74,6 @@ memo doag_memo_load(FILE* fd) {
     mpz_inp_str(*z, fd, 10);
     fscanf(fd, "\n");
   }
-
-  return memo;
 }
 
 // Counting

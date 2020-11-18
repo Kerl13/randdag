@@ -32,7 +32,7 @@ typedef struct doag_memo_s {
 
 memo doag_memo_alloc(int N, int M);
 void doag_memo_free(memo);
-memo doag_memo_load(FILE*);
+void doag_memo_load(memo memo, FILE*);
 void doag_memo_dump(FILE*, memo);
 
 inline mpz_t* doag_memo_get_ptr(const memo memo, int n, int m, int k) {
