@@ -52,3 +52,13 @@ void generic_counter(__counter_t count, int M) {
 
   mpz_clear(x);
 }
+
+int generic_dumper(const char* filename, __dumper_t dumper) {
+  FILE* fd = fopen(filename, "w");
+  if (fd == NULL) {
+    fprintf(stderr, "Cannot open file \"%s\"\n", filename);
+    return 1;
+  }
+  dumper(fd);
+  return 0;
+}

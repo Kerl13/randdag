@@ -21,10 +21,15 @@ randdag_t doag_sampler(gmp_randstate_t state) {
 
 // Alias of type __counter_t of the sampling function for use in the generic
 // counter.
-
 mpz_t* doag_counter(int n, int m) {
   if (m <= n * (n - 1) / 2) return doag_count(memo, n, m, 1);
   else return &zero;
+}
+
+// Alias of type __dumper_t of the doag_dump function for use in the generic
+// dumper.
+void doag_dumper(FILE* fd) {
+  doag_memo_dump(fd, memo);
 }
 
 int main(int argc, char* argv[]) {
@@ -57,15 +62,8 @@ int main(int argc, char* argv[]) {
   generic_counter(doag_counter, M);
 
   // Dump
-
   if (opts.dump_file) {
-    FILE* fd = fopen(opts.dump_file, "w");
-    if (fd != NULL) {
-      doag_memo_dump(fd, memo);
-    } else {
-      fprintf(stderr, "Cannot open file \"%s\"\n", opts.dump_file);
-      return 1;
-    }
+    generic_dumper(opts.dump_file, doag_dumper);
   }
 
   // Random sampling

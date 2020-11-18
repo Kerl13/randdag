@@ -33,6 +33,12 @@ mpz_t* bdoag_counter(int n, int m) {
     return &zero;
 }
 
+// Alias of type __dumper_t of the bdoag_dump function for use in the generic
+// dumper.
+void bdoag_dumper(FILE* fd) {
+  bdoag_memo_dump(fd, memo);
+}
+
 int main(int argc, char* argv[]) {
   randdag_cli_options opts = randdag_cli_parse(30, argc, argv);
   M = opts.count;
@@ -60,15 +66,8 @@ int main(int argc, char* argv[]) {
   generic_counter(bdoag_counter, M);
 
   // Dump
-
   if (opts.dump_file) {
-    FILE* fd = fopen(opts.dump_file, "w");
-    if (fd) {
-      bdoag_memo_dump(fd, memo);
-    } else {
-      fprintf(stderr, "Cannot open file \"%s\"\n", opts.dump_file);
-      return 1;
-    }
+    generic_dumper(opts.dump_file, bdoag_dumper);
   }
 
   // Random sampling
