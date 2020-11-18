@@ -12,8 +12,10 @@ RANLIB = ranlib
 BUILD  = build/
 
 all: $(BUILD)libdoag.a $(BUILD)doag/doag
+all: $(BUILD)libbdoag.a $(BUILD)bdoag/bdoag
 
 clean:
 	rm -rf $(BUILD)
 
 include src/doag/doag.mk
+include src/bdoag/bdoag.mk
