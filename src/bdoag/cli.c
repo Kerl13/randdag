@@ -8,9 +8,8 @@
 #include "../../includes/bdoag.h"
 #include "../cli/cli.h"
 
-static inline int min(int x, int y) {
-  return x < y ? x : y;
-}
+static inline int min(int x, int y) { return x < y ? x : y; }
+static inline int max(int x, int y) { return x < y ? y : x; }
 
 static int sample(char* sample_file, const bdoag_memo memo, int M, int bound) {
   // Setup output file
@@ -45,10 +44,29 @@ static int sample(char* sample_file, const bdoag_memo memo, int M, int bound) {
 
 int main(int argc, char* argv[]) {
   randdag_cli_options opts = randdag_cli_parse(30, argc, argv);
-  int bound = 2;
 
+  int bound = 2; // Make this a cmd line arg
   int M = opts.count;
-  bdoag_memo memo = bdoag_memo_alloc(M + 1, M, bound);
+  bdoag_memo memo;
+  
+  // Alloc memo and load
+
+  if (opts.load_file) {
+    FILE* fd = fopen(opts.load_file, "r");
+    if (fd != NULL) {
+      int N, M2;
+      fscanf(fd, "%d %d %d\n", &N, &M2, &bound);
+
+      M = max(M, M2);
+      N = max(M + 1, N);
+      memo = bdoag_memo_alloc(N, M, bound);
+    } else {
+      fprintf(stderr, "Cannot open file \"%s\"\n", opts.load_file);
+      return 1;
+    }
+  } else {
+    memo = bdoag_memo_alloc(M + 1, M, bound);
+  }
 
   // Counting
 
@@ -66,6 +84,18 @@ int main(int argc, char* argv[]) {
     fflush(stdout);
   }
   mpz_clear(res);
+
+  // Dump
+
+  if (opts.dump_file) {
+    FILE* fd = fopen(opts.dump_file, "w");
+    if (fd) {
+      bdoag_memo_dump(fd, memo);
+    } else {
+      fprintf(stderr, "Cannot open file \"%s\"\n", opts.dump_file);
+      return 1;
+    }
+  }
 
   // Random sampling
 
