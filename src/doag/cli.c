@@ -5,7 +5,7 @@
 #include <assert.h>
 #include <gmp.h>
 
-#include "../../includes/common.h"
+#include "../common/cli.h"
 #include "../../includes/doag.h"
 
 mpz_t zero;

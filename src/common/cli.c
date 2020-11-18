@@ -5,7 +5,7 @@
 #include <limits.h>
 #include <getopt.h>
 
-#include "../../includes/common.h"
+#include "cli.h"
 
 // Generic commands
 

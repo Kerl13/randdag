@@ -5,7 +5,7 @@
 #include <assert.h>
 #include <gmp.h>
 
-#include "../../includes/common.h"
+#include "../common/cli.h"
 #include "../../includes/bdoag.h"
 
 static inline int min(int x, int y) { return x < y ? x : y; }
