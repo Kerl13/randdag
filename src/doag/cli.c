@@ -5,6 +5,7 @@
 #include <assert.h>
 #include <gmp.h>
 
+#include "../../includes/common.h"
 #include "../../includes/doag.h"
 #include "../cli/cli.h"
 
@@ -31,13 +32,13 @@ static int sample(char* sample_file, const memo memo, int M) {
   gmp_randseed_ui(state, seed);
 
   // Sample
-  doag g = doag_unif_m(state, memo, M);
-  doag_to_dot(fd, g);
+  randdag_t g = doag_unif_m(state, memo, M);
+  randdag_to_dot(fd, g);
   fflush(fd);
 
   // Do some cleaning
   if (fd != stdout) fclose(fd);
-  doag_free(g);
+  randdag_free(g);
   gmp_randclear(state);
 
   return 0;

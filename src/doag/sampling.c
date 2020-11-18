@@ -2,20 +2,21 @@
 #include <assert.h>
 #include <gmp.h>
 
+#include "../../includes/common.h"
 #include "../../includes/doag.h"
 
 static inline int min(int x, int y) { return x < y ? x : y; }
 
 static void _add_src(gmp_randstate_t state,
-                     doag_vertex* dest,
-                     doag_vertex* other, int nb_other,
+                     randdag_vertex* dest,
+                     randdag_vertex* other, int nb_other,
                      int s, int q) {
   // assert(s + q > 0);
 
-  const doag_vertex* sources = other - 1;
+  const randdag_vertex* sources = other - 1;
 
   dest->out_degree = s + q;
-  doag_vertex* e = calloc(s + q, sizeof(doag_vertex));
+  randdag_vertex* e = calloc(s + q, sizeof(randdag_vertex));
   dest->out_edges = e;
 
   for (int i = 0; i < dest->out_degree; i++) {
@@ -25,7 +26,7 @@ static void _add_src(gmp_randstate_t state,
       q--;
     } else {
       int j = (int)gmp_urandomm_ui(state, nb_other) ;
-      doag_vertex tmp = other[0];
+      randdag_vertex tmp = other[0];
       other[0] = other[j];
       other[j] = tmp;
       *e = other[0];
@@ -37,7 +38,7 @@ static void _add_src(gmp_randstate_t state,
   }
 }
 
-static void _unif_doag(gmp_randstate_t state, const memo memo, doag_vertex* v, int n, int m, int k) {
+static void _unif_doag(gmp_randstate_t state, const memo memo, randdag_vertex* v, int n, int m, int k) {
   v[0].id = n;
 
   // Base case: only one vertex: the sink.
@@ -52,7 +53,7 @@ static void _unif_doag(gmp_randstate_t state, const memo memo, doag_vertex* v, i
     // assert(k == 1);
     _unif_doag(state, memo, v + 1, 1, 0, 1);
     v[0].out_degree = 1;
-    v[0].out_edges = calloc(1, sizeof(doag_vertex));
+    v[0].out_edges = calloc(1, sizeof(randdag_vertex));
     v[0].out_edges[0] = v[1];
     return;
   }
@@ -89,13 +90,13 @@ static void _unif_doag(gmp_randstate_t state, const memo memo, doag_vertex* v, i
   assert(0); // Shouldn't reach this point
 }
 
-doag doag_unif_nm(gmp_randstate_t state, const memo memo, int n, int m) {
-  doag g = doag_alloc(n);
+randdag_t doag_unif_nm(gmp_randstate_t state, const memo memo, int n, int m) {
+  randdag_t g = randdag_alloc(n);
   _unif_doag(state, memo, g.v, n, m, 1);
   return g;
 }
 
-doag doag_unif_m(gmp_randstate_t state, const memo memo, int m) {
+randdag_t doag_unif_m(gmp_randstate_t state, const memo memo, int m) {
   mpz_t r, tot;
   mpz_inits(r, tot, NULL);
 

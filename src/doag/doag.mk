@@ -5,15 +5,12 @@ $(BUILD)doag/doag: src/cli/cli.h src/cli/cli.c
 	$(CC) $(CFLAGS) -L$(BUILD) -o $@ src/doag/cli.c src/cli/cli.c -ldoag -lgmp
 
 # Static library
-$(BUILD)libdoag.a: $(BUILD)doag/graphs.o
+$(BUILD)libdoag.a: $(BUILD)common/graphs.o
 $(BUILD)libdoag.a: $(BUILD)doag/counting.o
 $(BUILD)libdoag.a: $(BUILD)doag/sampling.o
 	ar rc $@ $?
 	ranlib $@
 
-$(BUILD)doag/graphs.o: src/doag/graphs.c includes/doag.h
-	@mkdir -p "$(BUILD)/doag"
-	$(CC) $(CFLAGS) -o $@ -c src/doag/graphs.c
 $(BUILD)doag/counting.o: src/doag/counting.c includes/doag.h
 	@mkdir -p "$(BUILD)/doag"
 	$(CC) $(CFLAGS) -o $@ -c src/doag/counting.c

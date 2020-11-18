@@ -17,5 +17,6 @@ all: $(BUILD)libbdoag.a $(BUILD)bdoag/bdoag
 clean:
 	rm -rf $(BUILD)
 
+include src/common/common.mk
 include src/doag/doag.mk
 include src/bdoag/bdoag.mk
