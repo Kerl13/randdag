@@ -19,7 +19,9 @@ void randdag_free(randdag_t g) {
 
 void randdag_to_dot(FILE* fd, const randdag_t g) {
   fprintf(fd, "digraph G {\n  rankdir = \"TB\"\n  ordering = \"out\"\n");
-  fprintf(fd, "  node [shape=point, label=\"\"]\n  edge [arrowhead=none]\n");
+  fprintf(fd,
+    "  node [shape=circle, label=\"\", color=black, style=filled, width=1.5]\n"
+    "  edge [arrowhead=none, penwidth=2]\n");
 
   for (int i = 0; i < g.N; i++) {
     const randdag_vertex u = g.v[i];
