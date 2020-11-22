@@ -165,6 +165,10 @@ cli_options cli_parse(int def, int argc, char* argv[]) {
         }
         cli_opts.load_file = optarg;
         break;
+
+      default:
+        cli_usage(argv[0]);
+        exit(1);
     }
   }
 
