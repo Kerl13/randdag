@@ -6,6 +6,7 @@ $(BUILD)doag/doag: $(BUILD)common/cli.o
 
 # Static library
 $(BUILD)libdoag.a: $(BUILD)common/graphs.o
+$(BUILD)libdoag.a: $(BUILD)common/memo.o
 $(BUILD)libdoag.a: $(BUILD)doag/counting.o
 $(BUILD)libdoag.a: $(BUILD)doag/sampling.o
 	ar rc $@ $?

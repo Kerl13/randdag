@@ -2,10 +2,11 @@
 #include <gmp.h>
 
 #include "../common/cli.h"
+#include "../../includes/common.h"
 #include "../../includes/ldag.h"
 
 mpz_t zero;
-ldag_memo memo;
+memo_t memo;
 
 #define ignore(x) ((void)x)
 
@@ -32,7 +33,7 @@ void dumper(FILE* fd) {
 
 int prepare(int M, const char* filename) {
   if (filename) not_implemented();
-  memo = ldag_memo_alloc(M + 1, M);
+  memo = memo_alloc(M + 1, M, M + 1);
   return M;
 }
 
@@ -40,7 +41,7 @@ int main(int argc, char* argv[]) {
   int res = run_cli(argc, argv, prepare, counter, sampler, dumper); 
 
   mpz_clear(zero);
-  ldag_memo_free(memo);
+  memo_free(memo);
 
   return res;
 }

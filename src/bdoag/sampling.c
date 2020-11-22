@@ -38,7 +38,7 @@ static void _add_src(gmp_randstate_t state,
   }
 }
 
-static void _unif_bdoag(gmp_randstate_t state, const bdoag_memo memo,
+static void _unif_bdoag(gmp_randstate_t state, const memo_t memo,
                         randdag_vertex* v, int n, int m, int k, int bound) {
   v[0].id = n;
 
@@ -94,14 +94,14 @@ static void _unif_bdoag(gmp_randstate_t state, const bdoag_memo memo,
   assert(0); // Shouldn't reach this point
 }
 
-randdag_t bdoag_unif_nm(gmp_randstate_t state, const bdoag_memo memo,
+randdag_t bdoag_unif_nm(gmp_randstate_t state, const memo_t memo,
                         int n, int m, int bound) {
   randdag_t g = randdag_alloc(n);
   _unif_bdoag(state, memo, g.v, n, m, 1, bound);
   return g;
 }
 
-randdag_t bdoag_unif_m(gmp_randstate_t state, const bdoag_memo memo,
+randdag_t bdoag_unif_m(gmp_randstate_t state, const memo_t memo,
                        int m, int bound) {
   mpz_t r, tot;
   mpz_inits(r, tot, NULL);

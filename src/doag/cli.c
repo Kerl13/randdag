@@ -9,7 +9,7 @@
 #include "../../includes/doag.h"
 
 mpz_t zero;
-doag_memo memo;
+memo_t memo;
 
 randdag_t doag_sampler(gmp_randstate_t state, int M) {
   return doag_unif_m(state, memo, M);
@@ -21,7 +21,7 @@ mpz_t* doag_counter(int n, int m) {
 }
 
 void doag_dumper(FILE* fd) {
-  doag_memo_dump(fd, memo);
+  memo_dump(fd, memo);
 }
 
 int prepare(int M, const char* filename) {
@@ -36,14 +36,14 @@ int prepare(int M, const char* filename) {
       M = (M2 > M) ? M2 : M;
       N = (N > (M + 1)) ? N : (M + 1);
 
-      memo = doag_memo_alloc(N, M);
-      doag_memo_load(memo, fd);
+      memo = memo_alloc(N, M, N);
+      memo_load(memo, fd);
     } else {
       fprintf(stderr, "Cannot open file \"%s\"\n", filename);
       exit(1);
     }
   } else {
-    memo = doag_memo_alloc(M + 1, M);
+    memo = memo_alloc(M + 1, M, M + 1);
   }
 
   return M;
@@ -53,7 +53,7 @@ int main(int argc, char* argv[]) {
   int res = run_cli(argc, argv, prepare, doag_counter, doag_sampler, doag_dumper);
 
   mpz_clear(zero);
-  doag_memo_free(memo);
+  memo_free(memo);
 
   return res;
 }

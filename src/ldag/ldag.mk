@@ -6,6 +6,7 @@ $(BUILD)ldag/ldag: $(BUILD)common/cli.o
 
 # Static library
 $(BUILD)libldag.a: $(BUILD)common/graphs.o
+$(BUILD)libldag.a: $(BUILD)common/memo.o
 $(BUILD)libldag.a: $(BUILD)ldag/counting.o
 	$(AR) rc $@ $?
 	$(RANLIB) $@

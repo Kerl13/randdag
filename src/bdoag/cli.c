@@ -12,7 +12,7 @@ static inline int min(int x, int y) { return x < y ? x : y; }
 static inline int max(int x, int y) { return x < y ? y : x; }
 
 mpz_t zero;
-bdoag_memo memo;
+memo_t memo;
 int bound = 2; // TODO: make this a cmd line argument.
 
 randdag_t bdoag_sampler(gmp_randstate_t state, int M) {
@@ -28,7 +28,7 @@ mpz_t* bdoag_counter(int n, int m) {
 }
 
 void bdoag_dumper(FILE* fd) {
-  bdoag_memo_dump(fd, memo);
+  memo_dump(fd, memo);
 }
 
 int prepare(int M, const char* filename) {
@@ -42,13 +42,13 @@ int prepare(int M, const char* filename) {
 
       M = max(M, M2);
       N = max(M + 1, N);
-      memo = bdoag_memo_alloc(N, M, bound);
+      memo = memo_alloc(N, M, bound);
     } else {
       fprintf(stderr, "Cannot open file \"%s\"\n", filename);
       return 1;
     }
   } else {
-    memo = bdoag_memo_alloc(M + 1, M, bound);
+    memo = memo_alloc(M + 1, M, bound);
   }
 
   return M;
@@ -59,7 +59,7 @@ int main(int argc, char* argv[]) {
     argc, argv, prepare, bdoag_counter, bdoag_sampler, bdoag_dumper
   );
 
-  bdoag_memo_free(memo);
+  memo_free(memo);
   mpz_clear(zero);
 
   return res;
