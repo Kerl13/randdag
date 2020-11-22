@@ -7,18 +7,8 @@
 
 mpz_t zero;
 
-#define ignore(x) ((void)x)
-
-void not_implemented() {
-  fprintf(stderr, "Not implemented\n");
-  exit(2);
-}
-
-randdag_t sampler(gmp_randstate_t s, memo_t memo, int M) {
-  ignore(s);
-  ignore(M);
-  ignore(memo);
-  not_implemented();
+randdag_t sampler(gmp_randstate_t s, memo_t memo, int m) {
+  return ldag_unif_m(s, memo, m);
 }
 
 mpz_t* counter(memo_t memo, int n, int m) {
