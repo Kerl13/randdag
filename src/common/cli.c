@@ -7,9 +7,11 @@
 
 #include "cli.h"
 
+static inline int max(int x, int y) { return x < y ? y : x; }
+
 // Generic commands
 
-int generic_sampler(const char* filename, __sampler_t sampler, int M) {
+int generic_sampler(const char* filename, memo_t memo, __sampler_t sampler, int M) {
   // Setup output file
   FILE* fd = stdout;
   if (strcmp("-", filename) != 0)
@@ -28,7 +30,7 @@ int generic_sampler(const char* filename, __sampler_t sampler, int M) {
   gmp_randseed_ui(state, seed);
 
   // Sample
-  randdag_t g = sampler(state, M);
+  randdag_t g = sampler(state, memo, M);
   randdag_to_dot(fd, g);
   fflush(fd);
 
@@ -40,14 +42,14 @@ int generic_sampler(const char* filename, __sampler_t sampler, int M) {
   return 0;
 }
 
-void generic_counter(__counter_t count, int M) {
+void generic_counter(__counter_t count, memo_t memo, int M) {
   mpz_t x;
   mpz_init(x);
 
   for (int m = 1; m <= M; m++) {
     mpz_set_ui(x, 0);
     for (int n = 2; n <= m + 1; n++) {
-      mpz_add(x, x, *count(n, m));
+      mpz_add(x, x, *count(memo, n, m));
     }
     printf("%d: ", m);
     mpz_out_str(stdout, 10, x);
@@ -56,16 +58,6 @@ void generic_counter(__counter_t count, int M) {
   }
 
   mpz_clear(x);
-}
-
-int generic_dumper(const char* filename, __dumper_t dumper) {
-  FILE* fd = fopen(filename, "w");
-  if (fd == NULL) {
-    fprintf(stderr, "Cannot open file \"%s\"\n", filename);
-    return 1;
-  }
-  dumper(fd);
-  return 0;
 }
 
 // Command line parsing
@@ -190,17 +182,54 @@ cli_options cli_parse(int def, int argc, char* argv[]) {
 // Generic command line interface
 
 int run_cli(int argc, char* argv[],
-            __prepare_t prepare,
             __counter_t counter,
-            __sampler_t sampler,
-            __dumper_t dumper) {
+            __sampler_t sampler) {
 
   cli_options opts = cli_parse(30, argc, argv);
-  int M = prepare(opts.count, opts.load_file);
+  int M = opts.count;
+  memo_t memo;
 
-  generic_counter(counter, M);
-  if (opts.dump_file) generic_dumper(opts.dump_file, dumper);
-  if (opts.sample_file) generic_sampler(opts.sample_file, sampler, M);
+  // Load a pre-existing dump or allocate a fresh one.
+  if (opts.load_file) {
+    FILE* fd = fopen(opts.load_file, "r");
+    if (fd) {
+      // Parse the dump header.
+      int N, M2, bound;
+      char* line;
+      size_t len;
+      getline(&line, &len, fd);
+      int r = sscanf(line, "%d %d %d\n", &N, &M2, &bound);
+
+      M2 = max(M, M2);
+      N = max(M + 1, N);
+      if (r < 3) { bound = N; }
+
+      memo = memo_alloc(N, M2, bound);
+    } else {
+      fprintf(stderr, "Cannot open file \"%s\"\n", opts.load_file);
+      return 1;
+    }
+  } else {
+    memo = memo_alloc(M + 1, M, M + 1);
+  }
+
+  // Count.
+  generic_counter(counter, memo, M);
+
+  if (opts.dump_file) {
+    FILE* fd = fopen(opts.dump_file, "w");
+    if (fd == NULL) {
+      fprintf(stderr, "Cannot open file \"%s\"\n", opts.dump_file);
+      return 1;
+    }
+    memo_dump(fd, memo);
+    return 0;
+  }
+
+  // Dump the memoisation table if asked to.
+  if (opts.sample_file) {
+    generic_sampler(opts.sample_file, memo, sampler, M);
+  }
 
   return 0;
 }

@@ -5,12 +5,9 @@
 #include <stdio.h> // FILE
 #include "../../includes/common.h" // randdag_t
 
-typedef randdag_t (*__sampler_t) (gmp_randstate_t, int M);
-typedef mpz_t*    (*__counter_t) (int n, int m);
-typedef void      (*__dumper_t)  (FILE*);
-typedef int       (*__prepare_t) (int, const char*);
+typedef randdag_t (*__sampler_t) (gmp_randstate_t, memo_t, int M);
+typedef mpz_t*    (*__counter_t) (memo_t, int n, int m);
 
-int run_cli(int argc, char* argv[],
-            __prepare_t, __counter_t, __sampler_t, __dumper_t);
+int run_cli(int argc, char* argv[], __counter_t, __sampler_t);
 
 #endif

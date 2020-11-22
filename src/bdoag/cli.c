@@ -9,17 +9,15 @@
 #include "../../includes/bdoag.h"
 
 static inline int min(int x, int y) { return x < y ? x : y; }
-static inline int max(int x, int y) { return x < y ? y : x; }
 
 mpz_t zero;
-memo_t memo;
 int bound = 2; // TODO: make this a cmd line argument.
 
-randdag_t bdoag_sampler(gmp_randstate_t state, int M) {
+randdag_t bdoag_sampler(gmp_randstate_t state, memo_t memo, int M) {
   return bdoag_unif_m(state, memo, M, bound);
 }
 
-mpz_t* bdoag_counter(int n, int m) {
+mpz_t* bdoag_counter(memo_t memo, int n, int m) {
   const int C = min(bound, n - 1);
   if (m <= (C + 1) * C / 2 +  (n - 1 - C) * bound)
     return bdoag_count(memo, n, m, 1, bound);
@@ -27,40 +25,9 @@ mpz_t* bdoag_counter(int n, int m) {
     return &zero;
 }
 
-void bdoag_dumper(FILE* fd) {
-  memo_dump(fd, memo);
-}
-
-int prepare(int M, const char* filename) {
-  mpz_init(zero);
-
-  if (filename) {
-    FILE* fd = fopen(filename, "r");
-    if (fd != NULL) {
-      int N, M2;
-      fscanf(fd, "%d %d %d\n", &N, &M2, &bound);
-
-      M = max(M, M2);
-      N = max(M + 1, N);
-      memo = memo_alloc(N, M, bound);
-    } else {
-      fprintf(stderr, "Cannot open file \"%s\"\n", filename);
-      return 1;
-    }
-  } else {
-    memo = memo_alloc(M + 1, M, bound);
-  }
-
-  return M;
-}
-
 int main(int argc, char* argv[]) {
-  int res = run_cli(
-    argc, argv, prepare, bdoag_counter, bdoag_sampler, bdoag_dumper
-  );
-
-  memo_free(memo);
+  mpz_init(zero);
+  int res = run_cli(argc, argv, bdoag_counter, bdoag_sampler);
   mpz_clear(zero);
-
   return res;
 }
