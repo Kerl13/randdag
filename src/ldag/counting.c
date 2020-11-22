@@ -26,7 +26,10 @@ mpz_t* ldag_count(memo_t memo, int n, int m, int k) {
     // assert(k == 1);
     // assert(m == n - 1);
     // XXX. Super ugly…
-    if (!__two_set) mpz_init_set_ui(__two, 2);
+    if (!__two_set) {
+      mpz_init_set_ui(__two, 2);
+      __two_set = 1;
+    }
     return &__two;
   } else {
     mpz_t* res = memo_get_ptr(memo, n, m, k);
@@ -34,7 +37,7 @@ mpz_t* ldag_count(memo_t memo, int n, int m, int k) {
       mpz_t factor, factor0;
 
       // Invariant: factor = binomial(n - k - q, s) * binomial(k - 1 + q, q)
-      mpz_init(factor); 
+      mpz_init(factor);
 
       // Invariant: factor0 = factor(s=0) = binomial(k - 1 + p, p)
       mpz_init_set_ui(factor0, 1);
