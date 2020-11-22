@@ -18,7 +18,8 @@ mpz_t* counter(memo_t memo, int n, int m) {
 
 int main(int argc, char* argv[]) {
   mpz_init(zero);
-  int res = run_cli(argc, argv, counter, sampler); 
+  long dot_flags = RD_DOT_LABELLED;
+  int res = run_cli(argc, argv, counter, sampler, dot_flags); 
   mpz_clear(zero);
   return res;
 }

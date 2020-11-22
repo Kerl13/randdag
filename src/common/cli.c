@@ -11,7 +11,7 @@ static inline int max(int x, int y) { return x < y ? y : x; }
 
 // Generic commands
 
-int generic_sampler(const char* filename, memo_t memo, __sampler_t sampler, int M) {
+int generic_sampler(const char* filename, memo_t memo, __sampler_t sampler, long flags, int M) {
   // Setup output file
   FILE* fd = stdout;
   if (strcmp("-", filename) != 0)
@@ -31,7 +31,7 @@ int generic_sampler(const char* filename, memo_t memo, __sampler_t sampler, int 
 
   // Sample
   randdag_t g = sampler(state, memo, M);
-  randdag_to_dot(fd, g);
+  randdag_to_dot(fd, g, flags);
   fflush(fd);
 
   // Do some cleanups
@@ -186,8 +186,7 @@ cli_options cli_parse(int def, int argc, char* argv[]) {
 // Generic command line interface
 
 int run_cli(int argc, char* argv[],
-            __counter_t counter,
-            __sampler_t sampler) {
+            __counter_t counter, __sampler_t sampler, long flags) {
 
   cli_options opts = cli_parse(30, argc, argv);
   int M = opts.count;
@@ -232,7 +231,7 @@ int run_cli(int argc, char* argv[],
 
   // Dump the memoisation table if asked to.
   if (opts.sample_file) {
-    generic_sampler(opts.sample_file, memo, sampler, M);
+    generic_sampler(opts.sample_file, memo, sampler, flags, M);
   }
 
   return 0;

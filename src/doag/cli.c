@@ -21,7 +21,8 @@ mpz_t* doag_counter(memo_t memo, int n, int m) {
 
 int main(int argc, char* argv[]) {
   mpz_init(zero);
-  int res = run_cli(argc, argv, doag_counter, doag_sampler);
+  long dot_flags = RD_DOT_ORDERING;
+  int res = run_cli(argc, argv, doag_counter, doag_sampler, dot_flags);
   mpz_clear(zero);
   return res;
 }

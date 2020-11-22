@@ -17,16 +17,22 @@ void randdag_free(randdag_t g) {
   free(g.v);
 }
 
-void randdag_to_dot(FILE* fd, const randdag_t g) {
-  fprintf(fd, "digraph G {\n  rankdir = \"TB\"\n  ordering = \"out\"\n");
-  fprintf(fd,
-    "  node [shape=circle, label=\"\", color=black, style=filled, width=1.5]\n"
-    "  edge [arrowhead=none, penwidth=2]\n");
+void randdag_to_dot(FILE* fd, const randdag_t g, long flags) {
+  fprintf(fd, "digraph G {\n  rankdir = \"TB\"\n");
+  if (flags & RD_DOT_ORDERING) {
+    fprintf(fd, "  ordering = \"out\"\n");
+  }
+  fprintf(fd, "  edge [arrowhead=none, penwidth=2]\n");
+  if (! (flags & RD_DOT_LABELLED)) {
+    fprintf(fd, "  node [shape=circle, label=\"\", color=black, style=filled, width=1.5]\n");
+  }
 
   for (int i = 0; i < g.N; i++) {
     const randdag_vertex u = g.v[i];
 
-    fprintf(fd, "  n%d\n", u.id);
+    fprintf(fd, "  n%d", u.id);
+    if (flags & RD_DOT_LABELLED) fprintf(fd, " [label=\"%d\"]", u.id);
+    fprintf(fd, "\n");
     for (int j = 0; j < u.out_degree; j++) {
       fprintf(fd, "  n%d -> n%d\n", u.id, u.out_edges[j].id);
     }

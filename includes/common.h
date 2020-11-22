@@ -53,6 +53,13 @@ typedef struct _randdag_t {
 
 randdag_t randdag_alloc(int N);
 void randdag_free(randdag_t);
-void randdag_to_dot(FILE*, const randdag_t);
+
+enum randdag_dot_flag {
+  RD_DOT_LABELLED = 1,
+  RD_DOT_ORDERING = 2,
+};
+
+// TODO: exaplain the flags
+void randdag_to_dot(FILE*, const randdag_t, long flags);
 
 #endif
