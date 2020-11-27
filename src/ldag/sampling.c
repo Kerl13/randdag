@@ -1,6 +1,7 @@
 #include <malloc.h>
 #include <assert.h>
 #include <gmp.h>
+#include <string.h> // memcpy
 
 #include "../../includes/common.h"
 #include "../../includes/ldag.h"
@@ -8,34 +9,54 @@
 static inline int min(int x, int y) { return x < y ? x : y; }
 
 
-static void _fisher_yates(gmp_randstate_t state, randdag_vertex* v, int n) {
+static void _fisher_yates(gmp_randstate_t state, int* dest, int n) {
+  for (int i = 0; i < n; i++) dest[i] = i;
   for (int i = 0; i < n; i++) {
     int j = (int)gmp_urandomm_ui(state, n - i);
-    int tmp = v[i].id;
-    v[i].id = v[i + j].id;
-    v[i + j].id = tmp;
+    int tmp = dest[i];
+    dest[i] = dest[i + j];
+    dest[i + j] = tmp;
   }
 }
 
 
-static void _unif_combination(gmp_randstate_t state,
-                              randdag_vertex* dest,
-                              const randdag_vertex* set,
-                              int n, int k) {
-  while (k > 0) {
-    if ((int)gmp_urandomm_ui(state, n) < k) {
-      *dest = *set;
-      dest++;
-      k--;
+static void _add_src(gmp_randstate_t state,
+                     randdag_vertex* dest,
+                     randdag_vertex* other,
+                     const int nb_src, int nb_other,
+                     int s, const int q) {
+  randdag_vertex* sources = other - 1;
+
+  dest->out_degree = s + q;
+  randdag_vertex* e = calloc(s + q, sizeof(randdag_vertex));
+  dest->out_edges = e;
+
+  randdag_vertex tmp;
+  for (int i = 0; i < q; i++) {
+    int j = (int)gmp_urandomm_ui(state, nb_src - i);
+    tmp = sources[-i];
+    sources[-i] = sources[-i - j];
+    sources[-i - j] = tmp;
+    e[i] = sources[-i];
+  }
+  e = e + q;
+
+  while (s) {
+    if ((int)gmp_urandomm_ui(state, nb_other) < s) {
+      e[0] = other[0];
+      e++;
+      s--;
     }
-    set++;
-    n--;
+    other++;
+    nb_other--;
   }
 }
 
 
-static void _unif_ldag(gmp_randstate_t state, const memo_t memo, randdag_vertex* v, int n, int m, int k) {
-  v[0].id = n;
+static void _unif_ldag(gmp_randstate_t state, const memo_t memo,
+                       const int* labels, randdag_vertex* v,
+                       int n, int m, int k) {
+  v[0].id = labels[0];
 
   // Base case: only one vertex: the sink.
   if (n == 1) {
@@ -47,7 +68,7 @@ static void _unif_ldag(gmp_randstate_t state, const memo_t memo, randdag_vertex*
   if (n == 2) {
     // assert(m == 1);
     // assert(k == 1);
-    _unif_ldag(state, memo, v + 1, 1, 0, 1);
+    _unif_ldag(state, memo, labels + 1, v + 1, 1, 0, 1);
     v[0].out_degree = 1;
     v[0].out_edges = calloc(1, sizeof(randdag_vertex));
     v[0].out_edges[0] = v[1];
@@ -84,11 +105,8 @@ static void _unif_ldag(gmp_randstate_t state, const memo_t memo, randdag_vertex*
       if (m + kk * (kk - 1) / 2 <= p + (n - 1) * (n - 2) / 2) {
         mpz_submul(r, *ldag_count(memo, n - 1, m - p, kk), factor);
         if (mpz_sgn(r) < 0) {
-          _unif_ldag(state, memo, v + 1, n - 1, m - p, k - 1 + q);
-          v->out_degree = p;
-          v->out_edges = calloc(p, sizeof(randdag_vertex));
-          _unif_combination(state, v->out_edges, v + k + q, n - k - q, s);
-          _unif_combination(state, v->out_edges, v + 1, k - 1 + q, q);
+          _unif_ldag(state, memo, labels + 1, v + 1, n - 1, m - p, kk);
+          _add_src(state, v, v + kk + 1, kk, n - 1 - kk, s, q);
           mpz_clears(r, tmp, factor, factor0, NULL);
           return;
         }
@@ -104,8 +122,9 @@ static void _unif_ldag(gmp_randstate_t state, const memo_t memo, randdag_vertex*
 
 randdag_t ldag_unif_nm(gmp_randstate_t state, const memo_t memo, int n, int m) {
   randdag_t g = randdag_alloc(n);
-  _unif_ldag(state, memo, g.v, n, m, 1);
-  _fisher_yates(state, g.v, n);
+  int* labels = calloc(n, sizeof(int));
+  _fisher_yates(state, labels, n);
+  _unif_ldag(state, memo, labels, g.v, n, m, 1);
   return g;
 }
 
