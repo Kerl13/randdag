@@ -1,8 +1,3 @@
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <sys/random.h> // getrandom
-#include <assert.h>
 #include <gmp.h>
 
 #include "../common/cli.h"

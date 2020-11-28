@@ -1,8 +1,6 @@
-#include <stdlib.h>
 #include <gmp.h>
 
 #include "../common/cli.h"
-#include "../../includes/common.h"
 #include "../../includes/ldag.h"
 
 mpz_t zero;

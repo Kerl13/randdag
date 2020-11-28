@@ -1,13 +1,49 @@
-#include <string.h>
-#include <gmp.h>
-#include <sys/random.h>
-#include <stdlib.h>
-#include <limits.h>
-#include <getopt.h>
+#include <malloc.h>     // malloc, realloc
+#include <string.h>     // strcmp
+#include <gmp.h>        // mpz_*
+#include <sys/random.h> // getrandom (linux only)
+#include <stdlib.h>     // strtol, exit
+#include <limits.h>     // INT_MAX
+#include <getopt.h>     // getopt_long XXX. GNU-only
 
 #include "cli.h"
 
 static inline int max(int x, int y) { return x < y ? y : x; }
+
+// Utility function (getline in not available on non-gnu systems)
+
+char* mygetline(size_t* n, FILE* stream) {
+  size_t capacity;
+  char* buf;
+  char c;
+
+  capacity = 32;
+  *n = 0;
+  buf = malloc(capacity * sizeof(char));
+
+  while (1) {
+    if (*n == capacity - 1) {
+      capacity = capacity * 2;
+      buf = realloc(buf, capacity * sizeof(char));
+    }
+
+    c = getc(stream);
+    switch (c) {
+      case EOF:
+        buf[*n] = '\0';
+        (*n)++;
+        return buf;
+      case '\n':
+        buf[*n] = '\n';
+        buf[*n + 1] = '\0';
+        (*n) += 2;
+        return buf;
+      default:
+        buf[*n] = c;
+        (*n)++;
+    }
+  }
+}
 
 // Generic commands
 
@@ -122,18 +158,18 @@ cli_options cli_parse(int def, int argc, char* argv[]) {
       case 0:
         // Must be --help
         cli_usage(argv[0]);
-        exit(0);
+        exit(EXIT_SUCCESS);
 
       case 'c': {
         if (cli_opts.count > 0) {
           fprintf(stderr, "[--count | -c] cannot be set twice.\n");
           cli_usage(argv[0]);
-          exit(1);
+          exit(EXIT_FAILURE);
         }
         int arg = parse_pos_int(optarg);
         if (arg == -1) {
           cli_usage(argv[0]);
-          exit(1);
+          exit(EXIT_FAILURE);
         }
         cli_opts.count = arg;
         break;
@@ -143,7 +179,7 @@ cli_options cli_parse(int def, int argc, char* argv[]) {
         if (cli_opts.sample_file != NULL) {
           fprintf(stderr, "[--sample | -s] cannot be set twice.\n");
           cli_usage(argv[0]);
-          exit(1);
+          exit(EXIT_FAILURE);
         }
         cli_opts.sample_file = optarg;
         break;
@@ -152,7 +188,7 @@ cli_options cli_parse(int def, int argc, char* argv[]) {
         if (cli_opts.dump_file != NULL) {
           fprintf(stderr, "[--dump | -d] cannot be set twice.\n");
           cli_usage(argv[0]);
-          exit(1);
+          exit(EXIT_FAILURE);
         }
         cli_opts.dump_file = optarg;
         break;
@@ -161,14 +197,14 @@ cli_options cli_parse(int def, int argc, char* argv[]) {
         if (cli_opts.load_file != NULL) {
           fprintf(stderr, "[--load | -l] cannot be set twice.\n");
           cli_usage(argv[0]);
-          exit(1);
+          exit(EXIT_FAILURE);
         }
         cli_opts.load_file = optarg;
         break;
 
       default:
         cli_usage(argv[0]);
-        exit(1);
+        exit(EXIT_FAILURE);
     }
   }
 
@@ -177,7 +213,7 @@ cli_options cli_parse(int def, int argc, char* argv[]) {
   if (optind < argc) {
     fprintf(stderr, "Illegal argument: %s\n", argv[optind]);
     cli_usage(argv[0]);
-    exit(1);
+    exit(EXIT_FAILURE);
   }
 
   return cli_opts;
@@ -200,7 +236,7 @@ int run_cli(int argc, char* argv[],
       int N, M2, bound;
       char* line;
       size_t len;
-      getline(&line, &len, fd);
+      line = mygetline(&len, fd);
       int r = sscanf(line, "%d %d %d\n", &N, &M2, &bound);
 
       M2 = max(M, M2);
