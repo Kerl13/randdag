@@ -1,0 +1,14 @@
+This is a patched version of the argtable library version 3
+===========================================================
+
+The patch removes the NetBSD implementation of getopt that is shipped with
+argtable3 by default under the 4-clause BSD license.
+
+As a consequence :
+- this patched version of argtable is compatible with the GPLv3 license;
+- but it needs a implementation getopt to be available on your system to be able
+  to run (this is the case on GNU Linux for instance).
+
+The argtable website: https://www.argtable.org/
+Github repository: https://github.com/argtable/argtable3
+Copyright information: please read the LICENCE file

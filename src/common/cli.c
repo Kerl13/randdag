@@ -5,7 +5,7 @@
 #include <stdlib.h>     /* strtol, exit */
 #include <limits.h>     /* INT_MAX */
 
-#include "../../lib/argtable-3.1.5/argtable3.h"
+#include "../../lib/argtable3/argtable3.h"
 #include "cli.h"
 
 #define max(x, y) (((x) < (y)) ? (y) : (x))
