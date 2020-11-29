@@ -6,7 +6,7 @@
 #include "../../includes/common.h"
 #include "../../includes/ldag.h"
 
-static inline int min(int x, int y) { return x < y ? x : y; }
+#define min(x, y) (((x) < (y)) ? (x) : (y))
 
 
 static void _fisher_yates(gmp_randstate_t state, int* dest, int n) {

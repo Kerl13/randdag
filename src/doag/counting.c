@@ -5,7 +5,7 @@
 #include "../../includes/doag.h"
 
 
-static inline int min(int x, int y) { return x < y ? x : y; }
+#define min(x, y) (((x) < (y)) ? (x) : (y))
 
 
 mpz_t* doag_count(memo_t memo, int n, int m, int k) {

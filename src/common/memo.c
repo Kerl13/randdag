@@ -5,7 +5,7 @@
 #include "../../includes/common.h"
 
 
-static inline int min(int x, int y) { return x < y ? x : y; }
+#define min(x, y) (((x) < (y)) ? (x) : (y))
 
 
 memo_t memo_alloc(int N, int M, int bound) {

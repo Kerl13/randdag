@@ -8,7 +8,7 @@
 #include "../../lib/argtable-3.1.5/argtable3.h"
 #include "cli.h"
 
-static inline int max(int x, int y) { return x < y ? y : x; }
+#define max(x, y) (((x) < (y)) ? (y) : (x))
 
 /* Utility function (getline in not available on non-gnu systems) */
 

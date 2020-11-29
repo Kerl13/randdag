@@ -36,9 +36,7 @@ void memo_load(memo_t, FILE*);
 /* Get a pointer to the coefficient of indices (n, m, k) stored in memo.
  * It is the caller's responsibility to ensure that (n, m, k) is not out of
  * bounds. */
-inline mpz_t* memo_get_ptr(const memo_t memo, int n, int m, int k) {
-  return &(memo.vals[n - 2][k - 1][m + 1 - n]);
-}
+#define memo_get_ptr(memo, n, m, k) (&((memo).vals[(n) - 2][(k) - 1][(m) + 1 - (n)]))
 
 /************************
  * Graph representation *

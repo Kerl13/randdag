@@ -5,7 +5,7 @@
 #include "../../includes/common.h"
 #include "../../includes/doag.h"
 
-static inline int min(int x, int y) { return x < y ? x : y; }
+#define min(x, y) (((x) < (y)) ? (x) : (y))
 
 static void _add_src(gmp_randstate_t state,
                      randdag_vertex* dest,

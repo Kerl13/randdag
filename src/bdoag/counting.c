@@ -7,7 +7,7 @@
 #include <assert.h>
 
 
-static inline int min(int x, int y) { return x < y ? x : y; }
+#define min(x, y) (((x) < (y)) ? (x) : (y))
 
 mpz_t* bdoag_count(memo_t memo, int n, int m, int k, int bound) {
   assert(k >= 1);

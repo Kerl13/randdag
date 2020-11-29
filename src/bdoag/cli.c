@@ -3,7 +3,6 @@
 #include "../common/cli.h"
 #include "../../includes/bdoag.h"
 
-static inline int min(int x, int y) { return x < y ? x : y; }
 
 mpz_t zero;
 
@@ -15,7 +14,7 @@ randdag_t bdoag_sampler(gmp_randstate_t state, memo_t memo, int M) {
 }
 
 mpz_t* bdoag_counter(memo_t memo, int n, int m) {
-  const int C = min(bound, n - 1);
+  const int C = (bound < n) ? bound : n - 1;
   if (m <= (C + 1) * C / 2 +  (n - 1 - C) * bound)
     return bdoag_count(memo, n, m, 1, bound);
   else
