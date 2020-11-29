@@ -17,7 +17,7 @@ void randdag_free(randdag_t g) {
   free(g.v);
 }
 
-void randdag_to_dot(FILE* fd, const randdag_t g, long flags) {
+void randdag_to_dot(FILE* fd, const randdag_t g, unsigned int flags) {
   fprintf(fd, "digraph G {\n  rankdir = \"TB\"\n");
   if (flags & RD_DOT_ORDERING) {
     fprintf(fd, "  ordering = \"out\"\n");

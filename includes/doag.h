@@ -5,11 +5,11 @@
 #include <gmp.h>
 #include "common.h"
 
-// Counting
+/* Counting */
 
 mpz_t* doag_count(memo_t, int n, int m, int k);
 
-// Random sampling
+/* Random sampling */
 
 randdag_t doag_unif_nm(gmp_randstate_t, const memo_t, int n, int m);
 randdag_t doag_unif_m(gmp_randstate_t, const memo_t, int m);
