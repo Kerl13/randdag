@@ -14,18 +14,18 @@ mpz_t __two;
 int __two_set = 0;
 
 mpz_t* ldag_count(memo_t memo, int n, int m, int k) {
-  // assert(k >= 1);
-  // assert(n == 1 || k < n);
-  // assert(n - 1 <= m);
-  // assert(m <= n * (n - 1) / 2 - k * (k - 1) / 2);
+  /* assert(k >= 1); */
+  /* assert(n == 1 || k < n); */
+  /* assert(n - 1 <= m); */
+  /* assert(m <= n * (n - 1) / 2 - k * (k - 1) / 2); */
   if (n == 1) {
-    // assert(k == 1);
-    // assert(m == n - 1);
+    /* assert(k == 1); */
+    /* assert(m == n - 1); */
     return memo.one;
   } else if (n == 2) {
-    // assert(k == 1);
-    // assert(m == n - 1);
-    // XXX. Super ugly…
+    /* assert(k == 1); */
+    /* assert(m == n - 1); */
+    /* XXX. Super ugly… */
     if (!__two_set) {
       mpz_init_set_ui(__two, 2);
       __two_set = 1;
@@ -36,10 +36,10 @@ mpz_t* ldag_count(memo_t memo, int n, int m, int k) {
     if (mpz_sgn(*res) == 0) {
       mpz_t factor, factor0;
 
-      // Invariant: factor = binomial(n - k - q, s) * binomial(k - 1 + q, q)
+      /* Invariant: factor = binomial(n - k - q, s) * binomial(k - 1 + q, q) */
       mpz_init(factor);
 
-      // Invariant: factor0 = factor(s=0) = binomial(k - 1 + p, p)
+      /* Invariant: factor0 = factor(s=0) = binomial(k - 1 + p, p) */
       mpz_init_set_ui(factor0, 1);
 
       for (int p = 1; p <= min(n - k, m + 2 - n); p++) {

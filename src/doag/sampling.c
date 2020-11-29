@@ -11,7 +11,7 @@ static void _add_src(gmp_randstate_t state,
                      randdag_vertex* dest,
                      randdag_vertex* other, int nb_other,
                      int s, int q) {
-  // assert(s + q > 0);
+  /* assert(s + q > 0); */
 
   const randdag_vertex* sources = other - 1;
 
@@ -41,7 +41,7 @@ static void _add_src(gmp_randstate_t state,
 static void _unif_doag(gmp_randstate_t state, const memo_t memo, randdag_vertex* v, int n, int m, int k) {
   v[0].id = n;
 
-  // Base case: only one vertex: the sink.
+  /* Base case: only one vertex: the sink. */
   if (n == 1) {
     v[0].out_degree = 0;
     v[0].out_edges = NULL;
@@ -49,8 +49,8 @@ static void _unif_doag(gmp_randstate_t state, const memo_t memo, randdag_vertex*
   }
 
   if (n == 2) {
-    // assert(m == 1);
-    // assert(k == 1);
+    /* assert(m == 1); */
+    /* assert(k == 1); */
     _unif_doag(state, memo, v + 1, 1, 0, 1);
     v[0].out_degree = 1;
     v[0].out_edges = calloc(1, sizeof(randdag_vertex));
@@ -66,7 +66,7 @@ static void _unif_doag(gmp_randstate_t state, const memo_t memo, randdag_vertex*
 
   fflush(stdout);
 
-  // p = q + s
+  /* p = q + s */
   for (int p = 1; p <= min(n - k, m + 2 - n); p++) {
     const int s_start = (p == n - k);
     mpz_set_ui(factor, s_start ? ((n - k - p + s_start) * p) : 1);
@@ -87,7 +87,8 @@ static void _unif_doag(gmp_randstate_t state, const memo_t memo, randdag_vertex*
     }
   }
 
-  assert(0); // Shouldn't reach this point
+  /* Shouldn't reach this point */
+  assert(0);
 }
 
 randdag_t doag_unif_nm(gmp_randstate_t state, const memo_t memo, int n, int m) {
@@ -117,5 +118,6 @@ randdag_t doag_unif_m(gmp_randstate_t state, const memo_t memo, int m) {
     }
   }
 
-  assert(0); // Shouldn't reach this point
+  /* Shouldn't reach this point */
+  assert(0);
 }

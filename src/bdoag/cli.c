@@ -6,7 +6,9 @@
 static inline int min(int x, int y) { return x < y ? x : y; }
 
 mpz_t zero;
-int bound = 2; // TODO: make this a cmd line argument.
+
+/* TODO: make this a cmd line argument. */
+int bound = 2;
 
 randdag_t bdoag_sampler(gmp_randstate_t state, memo_t memo, int M) {
   return bdoag_unif_m(state, memo, M, bound);

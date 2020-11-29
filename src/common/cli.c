@@ -1,16 +1,16 @@
-#include <malloc.h>     // malloc, realloc
-#include <string.h>     // strcmp
-#include <gmp.h>        // mpz_*
-#include <sys/random.h> // getrandom (linux only)
-#include <stdlib.h>     // strtol, exit
-#include <limits.h>     // INT_MAX
+#include <malloc.h>     /* malloc, realloc */
+#include <string.h>     /* strcmp */
+#include <gmp.h>        /* mpz_* */
+#include <sys/random.h> /* getrandom (linux only) */
+#include <stdlib.h>     /* strtol, exit */
+#include <limits.h>     /* INT_MAX */
 
 #include "../../lib/argtable-3.1.5/argtable3.h"
 #include "cli.h"
 
 static inline int max(int x, int y) { return x < y ? y : x; }
 
-// Utility function (getline in not available on non-gnu systems)
+/* Utility function (getline in not available on non-gnu systems) */
 
 char* mygetline(size_t* n, FILE* stream) {
   size_t capacity;
@@ -45,10 +45,10 @@ char* mygetline(size_t* n, FILE* stream) {
   }
 }
 
-// Generic commands
+/* Generic commands */
 
 int generic_sampler(const char* filename, memo_t memo, __sampler_t sampler, long flags, int M) {
-  // Setup output file
+  /* Setup output file */
   FILE* fd = stdout;
   if (strcmp("-", filename) != 0)
     fd = fopen(filename, "w");
@@ -57,7 +57,7 @@ int generic_sampler(const char* filename, memo_t memo, __sampler_t sampler, long
     return 1;
   }
 
-  // Prepare RNG
+  /* Prepare RNG */
   gmp_randstate_t state;
   gmp_randinit_mt(state);
   unsigned long int seed;
@@ -65,12 +65,12 @@ int generic_sampler(const char* filename, memo_t memo, __sampler_t sampler, long
   printf("Using random seed 0x%lx\n", seed);
   gmp_randseed_ui(state, seed);
 
-  // Sample
+  /* Sample */
   randdag_t g = sampler(state, memo, M);
   randdag_to_dot(fd, g, flags);
   fflush(fd);
 
-  // Do some cleanups
+  /* Do some cleanups */
   if (fd != stdout) fclose(fd);
   randdag_free(g);
   gmp_randclear(state);
@@ -96,7 +96,7 @@ void generic_counter(__counter_t count, memo_t memo, int M) {
   mpz_clear(x);
 }
 
-// Command line parsing
+/* Command line parsing */
 
 typedef struct cli_options {
   int count;
@@ -154,7 +154,7 @@ exit:
   return exitcode;
 }
 
-// Generic command line interface
+/* Generic command line interface */
 
 int run_cli(int argc, char* argv[],
             __counter_t counter, __sampler_t sampler, long flags) {
@@ -166,11 +166,11 @@ int run_cli(int argc, char* argv[],
   cli_parse(argc, argv, &opts);
   M = opts.count;
 
-  // Load a pre-existing dump or allocate a fresh one.
+  /* Load a pre-existing dump or allocate a fresh one. */
   if (opts.load_file) {
     FILE* fd = fopen(opts.load_file, "r");
     if (fd) {
-      // Parse the dump header.
+      /* Parse the dump header. */
       int N, M2, bound;
       char* line;
       size_t len;
@@ -190,7 +190,7 @@ int run_cli(int argc, char* argv[],
     memo = memo_alloc(M + 1, M, M + 1);
   }
 
-  // Count.
+  /* Count. */
   generic_counter(counter, memo, M);
 
   if (opts.dump_file) {
@@ -203,7 +203,7 @@ int run_cli(int argc, char* argv[],
     return 0;
   }
 
-  // Dump the memoisation table if asked to.
+  /* Dump the memoisation table if asked to. */
   if (opts.sample_file) {
     generic_sampler(opts.sample_file, memo, sampler, flags, M);
   }

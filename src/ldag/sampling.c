@@ -1,7 +1,7 @@
 #include <malloc.h>
 #include <assert.h>
 #include <gmp.h>
-#include <string.h> // memcpy
+#include <string.h> /* memcpy */
 
 #include "../../includes/common.h"
 #include "../../includes/ldag.h"
@@ -58,7 +58,7 @@ static void _unif_ldag(gmp_randstate_t state, const memo_t memo,
                        int n, int m, int k) {
   v[0].id = labels[0];
 
-  // Base case: only one vertex: the sink.
+  /* Base case: only one vertex: the sink. */
   if (n == 1) {
     v[0].out_degree = 0;
     v[0].out_edges = NULL;
@@ -66,8 +66,8 @@ static void _unif_ldag(gmp_randstate_t state, const memo_t memo,
   }
 
   if (n == 2) {
-    // assert(m == 1);
-    // assert(k == 1);
+    /* assert(m == 1); */
+    /* assert(k == 1); */
     _unif_ldag(state, memo, labels + 1, v + 1, 1, 0, 1);
     v[0].out_degree = 1;
     v[0].out_edges = calloc(1, sizeof(randdag_vertex));
@@ -87,7 +87,7 @@ static void _unif_ldag(gmp_randstate_t state, const memo_t memo,
 
   mpz_urandomm(r, state, tmp);
 
-  // p = q + s
+  /* p = q + s */
   for (int p = 1; p <= min(n - k, m + 2 - n); p++) {
     mpz_mul_ui(factor0, factor0, k - 1 + p);
     mpz_divexact_ui(factor0, factor0, p);
@@ -117,7 +117,8 @@ static void _unif_ldag(gmp_randstate_t state, const memo_t memo,
     }
   }
 
-  assert(0); // Shouldn't reach this point
+  /* Shouldn't reach this point */
+  assert(0);
 }
 
 randdag_t ldag_unif_nm(gmp_randstate_t state, const memo_t memo, int n, int m) {
@@ -149,5 +150,6 @@ randdag_t ldag_unif_m(gmp_randstate_t state, const memo_t memo, int m) {
     }
   }
 
-  assert(0); // Shouldn't reach this point
+  /* Shouldn't reach this point */
+  assert(0);
 }

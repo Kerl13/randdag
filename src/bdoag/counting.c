@@ -22,12 +22,11 @@ mpz_t* bdoag_count(memo_t memo, int n, int m, int k, int bound) {
     assert(m == n - 1);
     return memo.one;
   } else {
-    // mpz_t* res = &(memo.vals[n - 2][k - 1][m + 1 - n]);
     mpz_t* res = memo_get_ptr(memo, n, m, k);
     if (mpz_sgn(*res) == 0) {
       mpz_t factor;
       mpz_init(factor);
-      // p = q + s
+      /* p = q + s */
       const int max_p = min(C, m + 2 - n);
       for (int p = 1; p <= max_p; p++) {
         const int s_start = (p == n - k);

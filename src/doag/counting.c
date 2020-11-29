@@ -9,21 +9,20 @@ static inline int min(int x, int y) { return x < y ? x : y; }
 
 
 mpz_t* doag_count(memo_t memo, int n, int m, int k) {
-  // assert(k >= 1);
-  // assert(n == 1 || k < n);
-  // assert(n - 1 <= m);
-  // assert(m <= n * (n - 1) / 2 - k * (k - 1) / 2);
+  /* assert(k >= 1); */
+  /* assert(n == 1 || k < n); */
+  /* assert(n - 1 <= m); */
+  /* assert(m <= n * (n - 1) / 2 - k * (k - 1) / 2); */
   if (n <= 2) {
-    // assert(k == 1);
-    // assert(m == n - 1);
+    /* assert(k == 1); */
+    /* assert(m == n - 1); */
     return memo.one;
   } else {
-    // mpz_t* res = &(memo.vals[n - 2][k - 1][m + 1 - n]);
     mpz_t* res = memo_get_ptr(memo, n, m, k);
     if (mpz_sgn(*res) == 0) {
       mpz_t factor;
       mpz_init(factor);
-      // p = q + s
+      /* p = q + s */
       for (int p = 1; p <= min(n - k, m + 2 - n); p++) {
         const int s_start = (p == n - k);
         mpz_set_ui(factor, s_start ? ((n - k - p + s_start) * p) : 1);

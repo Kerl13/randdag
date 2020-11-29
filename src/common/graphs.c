@@ -1,4 +1,4 @@
-#include <malloc.h> // calloc
+#include <malloc.h> /* calloc */
 
 #include "../../includes/common.h"
 
