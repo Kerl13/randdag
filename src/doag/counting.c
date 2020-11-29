@@ -18,15 +18,18 @@ mpz_t* doag_count(memo_t memo, int n, int m, int k) {
     /* assert(m == n - 1); */
     return memo.one;
   } else {
-    mpz_t* res = memo_get_ptr(memo, n, m, k);
+    int p, s;
+    mpz_t *res;
+
+    res = memo_get_ptr(memo, n, m, k);
     if (mpz_sgn(*res) == 0) {
       mpz_t factor;
       mpz_init(factor);
       /* p = q + s */
-      for (int p = 1; p <= min(n - k, m + 2 - n); p++) {
+      for (p = 1; p <= min(n - k, m + 2 - n); p++) {
         const int s_start = (p == n - k);
         mpz_set_ui(factor, s_start ? ((n - k - p + s_start) * p) : 1);
-        for (int s = s_start; s <= p - (k == 1); s++) {
+        for (s = s_start; s <= p - (k == 1); s++) {
           const int q = p - s;
           if (m + (k - 1 + q) * (k - 2 + q) / 2 <= p + (n - 1) * (n - 2) / 2)
             mpz_addmul(*res, *doag_count(memo, n - 1, m - p, k - 1 + q), factor);
@@ -36,6 +39,7 @@ mpz_t* doag_count(memo_t memo, int n, int m, int k) {
       }
       mpz_clear(factor);
     }
+
     return res;
   }
 }

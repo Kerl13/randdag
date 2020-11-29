@@ -4,34 +4,32 @@
 
 #include "../../includes/bdoag.h"
 
-#include <assert.h>
-
 
 #define min(x, y) (((x) < (y)) ? (x) : (y))
 
 mpz_t* bdoag_count(memo_t memo, int n, int m, int k, int bound) {
-  assert(k >= 1);
-  assert(n == 1 || k < n);
-  assert(n - 1 <= m);
-
   const int C = min(bound, n - k);
-  assert(m <= k * C + C * (C - 1) / 2 + (n - k - C) * bound);
+  /* assert(k >= 1); */
+  /* assert(n == 1 || k < n); */
+  /* assert(n - 1 <= m); */
+  /* assert(m <= k * C + C * (C - 1) / 2 + (n - k - C) * bound); */
 
   if (n <= 2) {
-    assert(k == 1);
-    assert(m == n - 1);
+    /* assert(k == 1); */
+    /* assert(m == n - 1); */
     return memo.one;
   } else {
+    int p, s;
     mpz_t* res = memo_get_ptr(memo, n, m, k);
     if (mpz_sgn(*res) == 0) {
+      const int max_p = min(C, m + 2 - n);
       mpz_t factor;
       mpz_init(factor);
       /* p = q + s */
-      const int max_p = min(C, m + 2 - n);
-      for (int p = 1; p <= max_p; p++) {
+      for (p = 1; p <= max_p; p++) {
         const int s_start = (p == n - k);
         mpz_set_ui(factor, s_start ? ((n - k - p + s_start) * p) : 1);
-        for (int s = s_start; s <= p - (k == 1); s++) {
+        for (s = s_start; s <= p - (k == 1); s++) {
           const int q = p - s;
           const int C2 = min(n - q - k, bound);
           if (m - p  <= (k - 1 + q) * C2 + C2 * (C2 - 1) / 2 + (n - q - k - C2) * bound)

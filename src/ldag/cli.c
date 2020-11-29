@@ -15,9 +15,9 @@ static mpz_t* counter(memo_t memo, int n, int m) {
 }
 
 int main(int argc, char* argv[]) {
+  int exitcode;
   mpz_init(zero);
-  long dot_flags = RD_DOT_LABELLED;
-  int res = run_cli(argc, argv, counter, sampler, dot_flags); 
+  exitcode = run_cli(argc, argv, counter, sampler, RD_DOT_LABELLED); 
   mpz_clear(zero);
-  return res;
+  return exitcode;
 }

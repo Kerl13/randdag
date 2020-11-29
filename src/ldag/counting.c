@@ -34,6 +34,7 @@ mpz_t* ldag_count(memo_t memo, int n, int m, int k) {
   } else {
     mpz_t* res = memo_get_ptr(memo, n, m, k);
     if (mpz_sgn(*res) == 0) {
+      int p, s;
       mpz_t factor, factor0;
 
       /* Invariant: factor = binomial(n - k - q, s) * binomial(k - 1 + q, q) */
@@ -42,18 +43,19 @@ mpz_t* ldag_count(memo_t memo, int n, int m, int k) {
       /* Invariant: factor0 = factor(s=0) = binomial(k - 1 + p, p) */
       mpz_init_set_ui(factor0, 1);
 
-      for (int p = 1; p <= min(n - k, m + 2 - n); p++) {
+      for (p = 1; p <= min(n - k, m + 2 - n); p++) {
+        const int s_start = (p == n - k);
+
         mpz_mul_ui(factor0, factor0, k - 1 + p);
         mpz_divexact_ui(factor0, factor0, p);
-
-        const int s_start = (p == n - k);
         mpz_set(factor, factor0);
+
         if (s_start == 1) {
           mpz_mul_ui(factor, factor, p * (n - k - p + 1));
           mpz_divexact_ui(factor, factor, k - 1 + p);
         }
 
-        for (int s = s_start; s <= p - (k == 1); s++) {
+        for (s = s_start; s <= p - (k == 1); s++) {
           const int q = p - s;
           const int kk = k - 1 + q;
           if (m + kk * (kk - 1) / 2 <= p + (n - 1) * (n - 2) / 2)

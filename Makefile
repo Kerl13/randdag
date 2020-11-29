@@ -3,7 +3,7 @@
 .SUFFIXES:
 
 CC     = cc
-CFLAGS = -Wall -Wextra -pedantic -Wmissing-prototypes -O2 -std=c99
+CFLAGS = -Wall -Wextra -pedantic -Wmissing-prototypes -O2 -ansi
 LDLIBS = -lgmp
 AR     = ar
 RANLIB = ranlib

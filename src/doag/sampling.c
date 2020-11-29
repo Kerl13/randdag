@@ -12,14 +12,15 @@ static void _add_src(gmp_randstate_t state,
                      randdag_vertex* other, int nb_other,
                      int s, int q) {
   /* assert(s + q > 0); */
+  randdag_vertex* e;
+  int i;
 
   const randdag_vertex* sources = other - 1;
-
   dest->out_degree = s + q;
-  randdag_vertex* e = calloc(s + q, sizeof(randdag_vertex));
+  e = calloc(s + q, sizeof(randdag_vertex));
   dest->out_edges = e;
 
-  for (int i = 0; i < dest->out_degree; i++) {
+  for (i = 0; i < dest->out_degree; i++) {
     if ((int)gmp_urandomm_ui(state, s + q) < q) {
       *e = *sources;
       sources--;
@@ -39,6 +40,9 @@ static void _add_src(gmp_randstate_t state,
 }
 
 static void _unif_doag(gmp_randstate_t state, const memo_t memo, randdag_vertex* v, int n, int m, int k) {
+  mpz_t r, factor;
+  int p, s;
+
   v[0].id = n;
 
   /* Base case: only one vertex: the sink. */
@@ -58,19 +62,15 @@ static void _unif_doag(gmp_randstate_t state, const memo_t memo, randdag_vertex*
     return;
   }
 
-  mpz_t r, factor;
   mpz_init(r);
   mpz_init(factor);
-
   mpz_urandomm(r, state, *doag_count(memo, n, m, k));
 
-  fflush(stdout);
-
   /* p = q + s */
-  for (int p = 1; p <= min(n - k, m + 2 - n); p++) {
+  for (p = 1; p <= min(n - k, m + 2 - n); p++) {
     const int s_start = (p == n - k);
     mpz_set_ui(factor, s_start ? ((n - k - p + s_start) * p) : 1);
-    for (int s = s_start; s <= p - (k == 1); s++) {
+    for (s = s_start; s <= p - (k == 1); s++) {
       const int q = p - s;
       if (m + (k - 1 + q) * (k - 2 + q) / 2 <= p + (n - 1) * (n - 2) / 2) {
         mpz_submul(r, *doag_count(memo, n - 1, m - p, k - 1 + q), factor);
@@ -98,16 +98,17 @@ randdag_t doag_unif_nm(gmp_randstate_t state, const memo_t memo, int n, int m) {
 }
 
 randdag_t doag_unif_m(gmp_randstate_t state, const memo_t memo, int m) {
+  int n;
   mpz_t r, tot;
   mpz_inits(r, tot, NULL);
 
-  for (int n = 2; n <= m + 1; n++) {
+  for (n = 2; n <= m + 1; n++) {
     if (m <= n * (n - 1) / 2)
       mpz_add(tot, tot, *doag_count(memo, n, m, 1));
   }
   mpz_urandomm(r, state, tot);
 
-  for (int n = 2; n <= m + 1; n++) {
+  for (n = 2; n <= m + 1; n++) {
     if (m <= n * (n - 1) / 2) {
       mpz_sub(r, r, *doag_count(memo, n, m, 1));
       if (mpz_sgn(r) == -1) {

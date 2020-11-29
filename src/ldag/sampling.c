@@ -10,10 +10,11 @@
 
 
 static void _fisher_yates(gmp_randstate_t state, int* dest, int n) {
-  for (int i = 0; i < n; i++) dest[i] = i;
-  for (int i = 0; i < n; i++) {
-    int j = (int)gmp_urandomm_ui(state, n - i);
-    int tmp = dest[i];
+  int i, j, tmp;
+  for (i = 0; i < n; i++) dest[i] = i;
+  for (i = 0; i < n; i++) {
+    j = (int)gmp_urandomm_ui(state, n - i);
+    tmp = dest[i];
     dest[i] = dest[i + j];
     dest[i + j] = tmp;
   }
@@ -25,14 +26,15 @@ static void _add_src(gmp_randstate_t state,
                      randdag_vertex* other,
                      const int nb_src, int nb_other,
                      int s, const int q) {
+  int i;
+  randdag_vertex *e;
   randdag_vertex* sources = other - 1;
+  randdag_vertex tmp;
 
   dest->out_degree = s + q;
-  randdag_vertex* e = calloc(s + q, sizeof(randdag_vertex));
-  dest->out_edges = e;
+  dest->out_edges = e = calloc(s + q, sizeof(randdag_vertex));
 
-  randdag_vertex tmp;
-  for (int i = 0; i < q; i++) {
+  for (i = 0; i < q; i++) {
     int j = (int)gmp_urandomm_ui(state, nb_src - i);
     tmp = sources[-i];
     sources[-i] = sources[-i - j];
@@ -56,6 +58,9 @@ static void _add_src(gmp_randstate_t state,
 static void _unif_ldag(gmp_randstate_t state, const memo_t memo,
                        const int* labels, randdag_vertex* v,
                        int n, int m, int k) {
+  int p, s;
+  mpz_t r, factor, factor0, tmp;
+
   v[0].id = labels[0];
 
   /* Base case: only one vertex: the sink. */
@@ -75,7 +80,6 @@ static void _unif_ldag(gmp_randstate_t state, const memo_t memo,
     return;
   }
 
-  mpz_t r, factor, factor0, tmp;
   mpz_init(r);
   mpz_init(factor);
   mpz_init_set_ui(factor0, 1);
@@ -88,18 +92,19 @@ static void _unif_ldag(gmp_randstate_t state, const memo_t memo,
   mpz_urandomm(r, state, tmp);
 
   /* p = q + s */
-  for (int p = 1; p <= min(n - k, m + 2 - n); p++) {
+  for (p = 1; p <= min(n - k, m + 2 - n); p++) {
+    const int s_start = (p == n - k);
+
     mpz_mul_ui(factor0, factor0, k - 1 + p);
     mpz_divexact_ui(factor0, factor0, p);
-
-    const int s_start = (p == n - k);
     mpz_set(factor, factor0);
+
     if (s_start == 1) {
       mpz_mul_ui(factor, factor, p * (n - k - p + 1));
       mpz_divexact_ui(factor, factor, k - 1 + p);
     }
 
-    for (int s = s_start; s <= p - (k == 1); s++) {
+    for (s = s_start; s <= p - (k == 1); s++) {
       const int q = p - s;
       const int kk = k - 1 + q;
       if (m + kk * (kk - 1) / 2 <= p + (n - 1) * (n - 2) / 2) {
@@ -130,16 +135,17 @@ randdag_t ldag_unif_nm(gmp_randstate_t state, const memo_t memo, int n, int m) {
 }
 
 randdag_t ldag_unif_m(gmp_randstate_t state, const memo_t memo, int m) {
+  int n;
   mpz_t r, tot;
   mpz_inits(r, tot, NULL);
 
-  for (int n = 2; n <= m + 1; n++) {
+  for (n = 2; n <= m + 1; n++) {
     if (m <= n * (n - 1) / 2)
       mpz_add(tot, tot, *ldag_count(memo, n, m, 1));
   }
   mpz_urandomm(r, state, tot);
 
-  for (int n = 2; n <= m + 1; n++) {
+  for (n = 2; n <= m + 1; n++) {
     if (m <= n * (n - 1) / 2) {
       mpz_sub(r, r, *ldag_count(memo, n, m, 1));
       if (mpz_sgn(r) == -1) {

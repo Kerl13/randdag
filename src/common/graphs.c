@@ -5,12 +5,15 @@
 
 randdag_t randdag_alloc(int N) {
   randdag_vertex* v = calloc(N, sizeof(randdag_vertex));
-  randdag_t g = {.N = N, .v = v};
+  randdag_t g;
+  g.N = N;
+  g.v = v;
   return g;
 }
 
 void randdag_free(randdag_t g) {
-  for (int i = 0; i < g.N; i++) {
+  int i;
+  for (i = 0; i < g.N; i++) {
     if (g.v[i].out_degree > 0)
       free(g.v[i].out_edges);
   }
@@ -18,6 +21,8 @@ void randdag_free(randdag_t g) {
 }
 
 void randdag_to_dot(FILE* fd, const randdag_t g, unsigned int flags) {
+  int i;
+
   fprintf(fd, "digraph G {\n  rankdir = \"TB\"\n");
   if (flags & RD_DOT_ORDERING) {
     fprintf(fd, "  ordering = \"out\"\n");
@@ -27,13 +32,14 @@ void randdag_to_dot(FILE* fd, const randdag_t g, unsigned int flags) {
     fprintf(fd, "  node [shape=circle, label=\"\", color=black, style=filled, width=1.5]\n");
   }
 
-  for (int i = 0; i < g.N; i++) {
+  for (i = 0; i < g.N; i++) {
+    int j;
     const randdag_vertex u = g.v[i];
 
     fprintf(fd, "  n%d", u.id);
     if (flags & RD_DOT_LABELLED) fprintf(fd, " [label=\"%d\"]", u.id);
     fprintf(fd, "\n");
-    for (int j = 0; j < u.out_degree; j++) {
+    for (j = 0; j < u.out_degree; j++) {
       fprintf(fd, "  n%d -> n%d\n", u.id, u.out_edges[j].id);
     }
   }
