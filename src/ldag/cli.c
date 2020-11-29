@@ -5,11 +5,11 @@
 
 mpz_t zero;
 
-randdag_t sampler(gmp_randstate_t s, memo_t memo, int m) {
+static randdag_t sampler(gmp_randstate_t s, memo_t memo, int m) {
   return ldag_unif_m(s, memo, m);
 }
 
-mpz_t* counter(memo_t memo, int n, int m) {
+static mpz_t* counter(memo_t memo, int n, int m) {
   if (m <= n * (n - 1) / 2) return ldag_count(memo, n, m, 1);
   else return &zero;
 }

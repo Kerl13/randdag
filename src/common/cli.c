@@ -12,7 +12,7 @@
 
 /* Utility function (getline in not available on non-gnu systems) */
 
-char* mygetline(size_t* n, FILE* stream) {
+static char* mygetline(size_t* n, FILE* stream) {
   size_t capacity;
   char* buf;
   char c;
@@ -47,7 +47,7 @@ char* mygetline(size_t* n, FILE* stream) {
 
 /* Generic commands */
 
-int generic_sampler(const char* filename, memo_t memo, __sampler_t sampler, long flags, int M) {
+static int generic_sampler(const char* filename, memo_t memo, __sampler_t sampler, long flags, int M) {
   /* Setup output file */
   FILE* fd = stdout;
   if (strcmp("-", filename) != 0)
@@ -78,7 +78,7 @@ int generic_sampler(const char* filename, memo_t memo, __sampler_t sampler, long
   return 0;
 }
 
-void generic_counter(__counter_t count, memo_t memo, int M) {
+static void generic_counter(__counter_t count, memo_t memo, int M) {
   mpz_t x;
   mpz_init(x);
 

@@ -5,11 +5,11 @@
 
 mpz_t zero;
 
-randdag_t doag_sampler(gmp_randstate_t state, memo_t memo, int M) {
+static randdag_t doag_sampler(gmp_randstate_t state, memo_t memo, int M) {
   return doag_unif_m(state, memo, M);
 }
 
-mpz_t* doag_counter(memo_t memo, int n, int m) {
+static mpz_t* doag_counter(memo_t memo, int n, int m) {
   if (m <= n * (n - 1) / 2) return doag_count(memo, n, m, 1);
   else return &zero;
 }
