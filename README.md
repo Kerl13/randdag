@@ -3,20 +3,78 @@
 C library for the counting and uniform generation of various models of DAGs
 (Directed Acylic Graphs).
 
-## Build
 
-Run `make`.
+## Building
 
-For each DAG model, this will produce in the `build/` folder a static library
-and an executable providing a command line interface to the counting and
-sampling functions.
+### The libraries
 
-Randdag depends on the GMP library.
+Running `make` produces 3 static libraries in the `build/` folder, one for each
+DAG model:
 
-## Usage
+- `libdoag.a`: Directed Ordered Acyclic Graphs;
+- `libbdoag.a`: Bounded-degree Directed Ordered Acyclic Graphs;
+- `libldag.a`: Labelled Directed Acyclic Graphs.
 
-The executables are self-documenting, try the `-h` command line option.
+Each library exposes a function for counting the number of graphs of given
+number of sources, edges an vertices and as well as two random sampling
+functions:
 
-To use randdag, include the appropriate header file (see the `includes/` folder)
-in your C files and link against the library you wish to use **and** GMP, e.g.
-`-ldoag -lgmp`.
+- one for the **uniform** random sampling of graphs with a given number of edges
+  (`xxx_unif_m`);
+- one for the **uniform** random sampling of graphs with a given number of edges
+  and vertices.
+
+See the header files in `includes/` for more detail on the usage of each
+function.
+The counting and random sampling algorithms implemented here, as well as the
+different DAG models, are described in
+[this pre-print](https://wkerl.me/papers/lagos2020.pdf).
+
+Note that randdag depends on the [GMP](https://gmplib.org/) library.
+In order to use one of the libraries, you have to include the appropriate header
+file in your C code and link against the library you wish to use **and** GMP,
+e.g. `-ldoag -lgmp`.
+
+
+### The executables
+
+Running `make` also produces 3 executables `build/doag/doag`,
+`build/bdoag/bdoag` and `build/ldag/ldag`.
+They provide a command line interface to the counting an sampling functions.
+The executables should be self-documenting, try the `--help` flag:
+
+```
+usage: build/doag/doag [-h] [-c <M>] [-s <file>] [-d <file>] [-l <file>]
+  -h, --help           display this help and exit
+  -c, --count=<M>      count DAGs with up to M edges, defaults to 30
+  -s, --sample=<file>  write a uniform DAG with M edges to <file>
+  -d, --dump=<file>    dump counting info to <file>
+  -l, --load=<file>    load counting info from <file>
+```
+
+
+## Dependencies and Compliance
+
+Randdag depends on the [GMP](https://gmplib.org/) library for big integer
+computations.
+
+### Libraries
+
+The code for the 3 libraries *should* be compliant with the ANSI C standard,
+this means that you should expect it to compile and run on any system where you
+manage to compile GMP.
+
+The makefiles however require a POSIX-compliant environment to be used.
+Windows users will have to build randdag by hand, sorry…
+
+### Executables
+
+The executables have a few more compatibility requirements:
+
+- In addition to GMP, the executables require the `getopt` library to be
+  available on your system. This is the case on GNU Linux for instance.
+
+- At the moment, we use the `getrandom` Linux-specific function to seed the
+  pseudo-random number generator. This might change in the future.
+
+- The executables are C99-compliant.
