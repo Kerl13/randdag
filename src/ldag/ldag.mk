@@ -2,7 +2,8 @@
 $(BUILD)ldag/ldag: src/ldag/cli.c
 $(BUILD)ldag/ldag: $(BUILD)libldag.a
 $(BUILD)ldag/ldag: $(BUILD)common/cli.o
-	$(CC) $(CFLAGS) -L$(BUILD) -o $@ src/ldag/cli.c $(BUILD)common/cli.o -lldag -lgmp
+$(BUILD)ldag/ldag: $(BUILD)argtable.o
+	$(CC) $(CFLAGS) -L$(BUILD) -o $@ src/ldag/cli.c $(BUILD)common/cli.o $(BUILD)argtable.o -lldag -lgmp
 
 # Static library
 $(BUILD)libldag.a: $(BUILD)common/graphs.o

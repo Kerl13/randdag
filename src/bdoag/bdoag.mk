@@ -2,7 +2,8 @@
 $(BUILD)bdoag/bdoag: src/bdoag/cli.c
 $(BUILD)bdoag/bdoag: $(BUILD)libbdoag.a
 $(BUILD)bdoag/bdoag: $(BUILD)common/cli.o
-	$(CC) $(CFLAGS) -L$(BUILD) -o $@ src/bdoag/cli.c $(BUILD)common/cli.o -lbdoag -lgmp
+$(BUILD)bdoag/bdoag: $(BUILD)argtable.o
+	$(CC) $(CFLAGS) -L$(BUILD) -o $@ src/bdoag/cli.c $(BUILD)common/cli.o $(BUILD)argtable.o -lbdoag -lgmp
 
 # Static library
 $(BUILD)libbdoag.a: $(BUILD)common/graphs.o

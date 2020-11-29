@@ -4,8 +4,8 @@
 #include <sys/random.h> // getrandom (linux only)
 #include <stdlib.h>     // strtol, exit
 #include <limits.h>     // INT_MAX
-#include <getopt.h>     // getopt_long XXX. GNU-only
 
+#include "../../lib/argtable-3.1.5/argtable3.h"
 #include "cli.h"
 
 static inline int max(int x, int y) { return x < y ? y : x; }
@@ -98,125 +98,60 @@ void generic_counter(__counter_t count, memo_t memo, int M) {
 
 // Command line parsing
 
-typedef struct {
+typedef struct cli_options {
   int count;
-  char* sample_file;
-  char* dump_file;
-  char* load_file;
+  const char* sample_file;
+  const char* dump_file;
+  const char* load_file;
 } cli_options;
 
-static void cli_usage(char progname[]) {
-  fprintf(
-    stderr,
-    "usage: %s [-h] [-c NB] [-s FILE] [-d FILE] [-l FILE]\n\n"
-    "optional arguments:\n"
-    "  -h, --help             show this help message and exit\n"
-    "  -c NB, --count NB      set the number of terms to compute\n"
-    "  -s FILE, --sample FILE sample a uniform graph and save it in graphviz format;\n"
-    "                         if \"-\" is supplied, stdout will be used\n"
-    "  -d FILE, --dump FILE   dump counting information to FILE\n"
-    "  -l FILE, --load FILE   load counting information from FILE\n",
-    progname
-  );
-}
+struct arg_lit *help;
+struct arg_int *count;
+struct arg_file *sample, *dump, *load;
+struct arg_end *end;
 
-static int parse_pos_int(char* s) {
-  char* endptr;
-  long res = strtol(s, &endptr, 10);
-  if (endptr == s)
-    return -1;
-  else if (res > INT_MAX) {
-    fprintf(stderr, "NB is too big (> %d).\n", INT_MAX);
-    return -1;
-  } else if (res <= 0) {
-    fprintf(stderr, "NB most be positive.\n");
-    return -1;
-  } else
-    return (int)res;
-}
-
-cli_options cli_parse(int def, int argc, char* argv[]) {
-  cli_options cli_opts = {0, NULL, NULL, NULL};
-  int help = 0;
-
-  struct option long_options[] = {
-    {"count",  required_argument, NULL, 'c'},
-    {"sample", required_argument, NULL, 's'},
-    {"dump",   required_argument, NULL, 'd'},
-    {"load",   required_argument, NULL, 'l'},
-    {"help",   no_argument,       &help, 1},
+static int cli_parse(int argc, char* argv[], cli_options *opts) {
+  int exitcode, nerrors;
+  void* argtable[] = {
+    help = arg_litn("h", "help", 0, 1, "display this help and exit"),
+    count = arg_intn("c", "count", "<M>", 0, 1, "count DAGs with up to M edges, defaults to 30"),
+    sample = arg_filen("s", "sample", "<file>", 0, 1, "write a uniform DAG with M edges to <file>"),
+    dump = arg_filen("d", "dump", "<file>", 0, 1, "dump counting info to <file>"),
+    load = arg_filen("l", "load", "<file>", 0, 1, "load counting info from <file>"),
+    end = arg_end(10),
   };
-  int option_index = 0;
-  int c;
 
-  while (1) {
-    c = getopt_long(argc, argv, "c:s:d:l:h", long_options, &option_index);
-    if (c == -1) break;
+  exitcode = EXIT_SUCCESS;
+  nerrors = arg_parse(argc, argv, argtable);
 
-    switch (c) {
-      case 'h':
-      case 0:
-        // Must be --help
-        cli_usage(argv[0]);
-        exit(EXIT_SUCCESS);
-
-      case 'c': {
-        if (cli_opts.count > 0) {
-          fprintf(stderr, "[--count | -c] cannot be set twice.\n");
-          cli_usage(argv[0]);
-          exit(EXIT_FAILURE);
-        }
-        int arg = parse_pos_int(optarg);
-        if (arg == -1) {
-          cli_usage(argv[0]);
-          exit(EXIT_FAILURE);
-        }
-        cli_opts.count = arg;
-        break;
-      }
-
-      case 's':
-        if (cli_opts.sample_file != NULL) {
-          fprintf(stderr, "[--sample | -s] cannot be set twice.\n");
-          cli_usage(argv[0]);
-          exit(EXIT_FAILURE);
-        }
-        cli_opts.sample_file = optarg;
-        break;
-
-      case 'd':
-        if (cli_opts.dump_file != NULL) {
-          fprintf(stderr, "[--dump | -d] cannot be set twice.\n");
-          cli_usage(argv[0]);
-          exit(EXIT_FAILURE);
-        }
-        cli_opts.dump_file = optarg;
-        break;
-
-      case 'l':
-        if (cli_opts.load_file != NULL) {
-          fprintf(stderr, "[--load | -l] cannot be set twice.\n");
-          cli_usage(argv[0]);
-          exit(EXIT_FAILURE);
-        }
-        cli_opts.load_file = optarg;
-        break;
-
-      default:
-        cli_usage(argv[0]);
-        exit(EXIT_FAILURE);
-    }
+  if (help->count > 0) {
+    printf("usage: %s", argv[0]);
+    arg_print_syntax(stdout, argtable, "\n");
+    arg_print_glossary(stdout, argtable, "  %-20s %s\n");
+    goto exit;
   }
 
-  if (cli_opts.count <= 0) cli_opts.count = def;
-
-  if (optind < argc) {
-    fprintf(stderr, "Illegal argument: %s\n", argv[optind]);
-    cli_usage(argv[0]);
-    exit(EXIT_FAILURE);
+  if (nerrors > 0) {
+    arg_print_errors(stderr, end, argv[0]);
+    fprintf(stderr, "try: %s --help for more information.\n", argv[0]);
+    exitcode = EXIT_FAILURE;
+    goto exit;
   }
 
-  return cli_opts;
+  opts->count = (count->count > 0) ? count->ival[0] : 30;
+  if (opts->count <= 0) {
+    fprintf(stderr, "--count expects a positive integer.\n");
+    exitcode = EXIT_FAILURE;
+    goto exit;
+  }
+
+  opts->sample_file = (sample->count > 0) ? sample->filename[0] : NULL;
+  opts->dump_file = (dump->count > 0) ? dump->filename[0] : NULL;
+  opts->load_file = (load->count > 0) ? load->filename[0] : NULL;
+
+exit:
+  arg_freetable(argtable, sizeof(argtable) / sizeof(argtable[0]));
+  return exitcode;
 }
 
 // Generic command line interface
@@ -224,9 +159,12 @@ cli_options cli_parse(int def, int argc, char* argv[]) {
 int run_cli(int argc, char* argv[],
             __counter_t counter, __sampler_t sampler, long flags) {
 
-  cli_options opts = cli_parse(30, argc, argv);
-  int M = opts.count;
+  cli_options opts = {0, 0, 0, 0};
+  int M;
   memo_t memo;
+
+  cli_parse(argc, argv, &opts);
+  M = opts.count;
 
   // Load a pre-existing dump or allocate a fresh one.
   if (opts.load_file) {

@@ -18,6 +18,7 @@ all: $(BUILD)libldag.a $(BUILD)ldag/ldag
 clean:
 	rm -rf $(BUILD)
 
+include lib/argtable-3.1.5/argtable3.mk
 include src/common/common.mk
 include src/doag/doag.mk
 include src/bdoag/bdoag.mk

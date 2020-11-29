@@ -2,7 +2,8 @@
 $(BUILD)doag/doag: src/doag/cli.c
 $(BUILD)doag/doag: $(BUILD)libdoag.a
 $(BUILD)doag/doag: $(BUILD)common/cli.o
-	$(CC) $(CFLAGS) -L$(BUILD) -o $@ src/doag/cli.c $(BUILD)common/cli.o -ldoag -lgmp
+$(BUILD)doag/doag: $(BUILD)argtable.o
+	$(CC) $(CFLAGS) -L$(BUILD) -o $@ src/doag/cli.c $(BUILD)common/cli.o $(BUILD)argtable.o -ldoag -lgmp
 
 # Static library
 $(BUILD)libdoag.a: $(BUILD)common/graphs.o
