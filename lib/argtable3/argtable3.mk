@@ -1,7 +1,7 @@
 $(BUILD)argtable.o: lib/argtable3/argtable3.h
 $(BUILD)argtable.o: lib/argtable3/argtable3.c
 	@mkdir -p "$(BUILD)"
-	$(CC) $(CFLAGS) -Wno-clobbered -o $@ -c lib/argtable3/argtable3.c
+	$(CC) -Wall -Wextra -pedantic -Wmissing-prototypes -Wno-clobbered -O2 -std=c99 -o $@ -c lib/argtable3/argtable3.c
 
 
 # Note on the -Wno-clobbered flag
