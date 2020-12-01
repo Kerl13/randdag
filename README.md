@@ -78,3 +78,8 @@ The executables have a few more compatibility requirements:
   pseudo-random number generator. This might change in the future.
 
 - The executables are C99-compliant.
+
+## License
+
+This work is distributed under the GPL license version 3 (see the `LICENSE`
+file).
