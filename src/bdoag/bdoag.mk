@@ -10,8 +10,8 @@ $(BUILD)libbdoag.a: $(BUILD)common/graphs.o
 $(BUILD)libbdoag.a: $(BUILD)common/memo.o
 $(BUILD)libbdoag.a: $(BUILD)bdoag/sampling.o
 $(BUILD)libbdoag.a: $(BUILD)bdoag/counting.o
-	ar rc $@ $?
-	ranlib $@
+	$(AR) rc $@ $?
+	$(RANLIB) $@
 
 $(BUILD)bdoag/counting.o: src/bdoag/counting.c includes/bdoag.h
 	@mkdir -p "$(BUILD)/bdoag"

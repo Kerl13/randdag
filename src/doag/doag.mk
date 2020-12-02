@@ -10,8 +10,8 @@ $(BUILD)libdoag.a: $(BUILD)common/graphs.o
 $(BUILD)libdoag.a: $(BUILD)common/memo.o
 $(BUILD)libdoag.a: $(BUILD)doag/counting.o
 $(BUILD)libdoag.a: $(BUILD)doag/sampling.o
-	ar rc $@ $?
-	ranlib $@
+	$(AR) rc $@ $?
+	$(RANLIB) $@
 
 $(BUILD)doag/counting.o: src/doag/counting.c includes/doag.h
 	@mkdir -p "$(BUILD)/doag"
