@@ -15,24 +15,22 @@
    You should have received a copy of the GNU General Public License
    along with this program.  If not, see <https://www.gnu.org/licenses/>. */
 
+#include <gmp.h>
 #include <malloc.h>
 #include <stdio.h>
-#include <gmp.h>
 
 #include "../../includes/common.h"
 
-
 #define min(x, y) (((x) < (y)) ? (x) : (y))
-
 
 memo_t memo_alloc(int N, int M, int bound) {
   int n, m, k;
-  mpz_t*** vals;
+  mpz_t ***vals;
   memo_t memo;
 
-  vals = calloc(N - 1, sizeof(mpz_t**));
+  vals = calloc(N - 1, sizeof(mpz_t **));
   for (n = 2; n <= N; n++) {
-    vals[n - 2] = calloc(n - 1, sizeof(mpz_t*));
+    vals[n - 2] = calloc(n - 1, sizeof(mpz_t *));
 
     for (k = 1; k < n; k++) {
       const int C = min(bound, n - k);
@@ -54,7 +52,6 @@ memo_t memo_alloc(int N, int M, int bound) {
 
   return memo;
 }
-
 
 void memo_free(memo_t memo) {
   int n, m, k;
@@ -78,7 +75,7 @@ void memo_free(memo_t memo) {
   free(memo.one);
 }
 
-void memo_dump(FILE* fd, const memo_t memo) {
+void memo_dump(FILE *fd, const memo_t memo) {
   int n, m, k;
   const int M = memo.M;
   const int bound = memo.bound;
@@ -89,7 +86,7 @@ void memo_dump(FILE* fd, const memo_t memo) {
       const int C = min(n - k, bound);
       const int max_m = min(k * C + (C - 1) * C / 2 + bound * (n - k - C), M);
       for (m = n - 1; m <= max_m; m++) {
-        mpz_t* x = memo_get_ptr(memo, n, m, k);
+        mpz_t *x = memo_get_ptr(memo, n, m, k);
         if (mpz_sgn(*x) > 0) {
           fprintf(fd, "%d %d %d ", n, m, k);
           mpz_out_str(fd, 10, *x);
@@ -100,12 +97,13 @@ void memo_dump(FILE* fd, const memo_t memo) {
   }
 }
 
-void memo_load(memo_t memo, FILE* fd) {
+void memo_load(memo_t memo, FILE *fd) {
   int n, m, k;
   mpz_t *z;
 
   while (1) {
-    if (fscanf(fd, "%d %d %d ", &n, &m, &k) == EOF) break;
+    if (fscanf(fd, "%d %d %d ", &n, &m, &k) == EOF)
+      break;
     z = memo_get_ptr(memo, n, m, k);
     mpz_inp_str(*z, fd, 10);
     fscanf(fd, "\n");

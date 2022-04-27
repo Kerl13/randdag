@@ -15,22 +15,21 @@
    You should have received a copy of the GNU General Public License
    along with this program.  If not, see <https://www.gnu.org/licenses/>. */
 
+#include <gmp.h>
 #include <malloc.h>
 #include <stdio.h>
-#include <gmp.h>
 
 #include "../../includes/common.h"
 #include "../../includes/ldag.h"
 
 #include <assert.h>
 
-
 #define min(x, y) (((x) < (y)) ? (x) : (y))
 
 mpz_t __two;
 int __two_set = 0;
 
-mpz_t* ldag_count(memo_t memo, int n, int m, int k) {
+mpz_t *ldag_count(memo_t memo, int n, int m, int k) {
   /* assert(k >= 1); */
   /* assert(n == 1 || k < n); */
   /* assert(n - 1 <= m); */
@@ -49,7 +48,7 @@ mpz_t* ldag_count(memo_t memo, int n, int m, int k) {
     }
     return &__two;
   } else {
-    mpz_t* res = memo_get_ptr(memo, n, m, k);
+    mpz_t *res = memo_get_ptr(memo, n, m, k);
     if (mpz_sgn(*res) == 0) {
       int p, s;
       mpz_t factor, factor0;

@@ -1,13 +1,13 @@
 #ifndef _DOAG_H
 #define _DOAG_H
 
-#include <stdio.h>
-#include <gmp.h>
 #include "common.h"
+#include <gmp.h>
+#include <stdio.h>
 
 /* Counting */
 
-mpz_t* doag_count(memo_t, int n, int m, int k);
+mpz_t *doag_count(memo_t, int n, int m, int k);
 
 /* Random sampling */
 

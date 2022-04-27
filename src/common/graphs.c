@@ -19,9 +19,8 @@
 
 #include "../../includes/common.h"
 
-
 randdag_t randdag_alloc(int N) {
-  randdag_vertex* v = calloc(N, sizeof(randdag_vertex));
+  randdag_vertex *v = calloc(N, sizeof(randdag_vertex));
   randdag_t g;
   g.N = N;
   g.v = v;
@@ -37,7 +36,7 @@ void randdag_free(randdag_t g) {
   free(g.v);
 }
 
-void randdag_to_dot(FILE* fd, const randdag_t g, unsigned int flags) {
+void randdag_to_dot(FILE *fd, const randdag_t g, unsigned int flags) {
   int i;
 
   fprintf(fd, "digraph G {\n  rankdir = \"TB\"\n");
@@ -45,8 +44,9 @@ void randdag_to_dot(FILE* fd, const randdag_t g, unsigned int flags) {
     fprintf(fd, "  ordering = \"out\"\n");
   }
   fprintf(fd, "  edge [arrowhead=none, penwidth=2]\n");
-  if (! (flags & RD_DOT_LABELLED)) {
-    fprintf(fd, "  node [shape=circle, label=\"\", color=black, style=filled, width=1.5]\n");
+  if (!(flags & RD_DOT_LABELLED)) {
+    fprintf(fd, "  node [shape=circle, label=\"\", color=black, style=filled, "
+                "width=1.5]\n");
   }
 
   for (i = 0; i < g.N; i++) {
@@ -54,7 +54,8 @@ void randdag_to_dot(FILE* fd, const randdag_t g, unsigned int flags) {
     const randdag_vertex u = g.v[i];
 
     fprintf(fd, "  n%d", u.id);
-    if (flags & RD_DOT_LABELLED) fprintf(fd, " [label=\"%d\"]", u.id);
+    if (flags & RD_DOT_LABELLED)
+      fprintf(fd, " [label=\"%d\"]", u.id);
     fprintf(fd, "\n");
     for (j = 0; j < u.out_degree; j++) {
       fprintf(fd, "  n%d -> n%d\n", u.id, u.out_edges[j].id);

@@ -15,9 +15,9 @@
    You should have received a copy of the GNU General Public License
    along with this program.  If not, see <https://www.gnu.org/licenses/>. */
 
-#include <malloc.h>
 #include <assert.h>
 #include <gmp.h>
+#include <malloc.h>
 #include <string.h> /* memcpy */
 
 #include "../../includes/common.h"
@@ -25,10 +25,10 @@
 
 #define min(x, y) (((x) < (y)) ? (x) : (y))
 
-
-static void _fisher_yates(gmp_randstate_t state, int* dest, int n) {
+static void _fisher_yates(gmp_randstate_t state, int *dest, int n) {
   int i, j, tmp;
-  for (i = 0; i < n; i++) dest[i] = i;
+  for (i = 0; i < n; i++)
+    dest[i] = i;
   for (i = 0; i < n; i++) {
     j = (int)gmp_urandomm_ui(state, n - i);
     tmp = dest[i];
@@ -37,15 +37,12 @@ static void _fisher_yates(gmp_randstate_t state, int* dest, int n) {
   }
 }
 
-
-static void _add_src(gmp_randstate_t state,
-                     randdag_vertex* dest,
-                     randdag_vertex* other,
-                     const int nb_src, int nb_other,
+static void _add_src(gmp_randstate_t state, randdag_vertex *dest,
+                     randdag_vertex *other, const int nb_src, int nb_other,
                      int s, const int q) {
   int i;
   randdag_vertex *e;
-  randdag_vertex* sources = other - 1;
+  randdag_vertex *sources = other - 1;
   randdag_vertex tmp;
 
   dest->out_degree = s + q;
@@ -71,10 +68,9 @@ static void _add_src(gmp_randstate_t state,
   }
 }
 
-
 static void _unif_ldag(gmp_randstate_t state, const memo_t memo,
-                       const int* labels, randdag_vertex* v,
-                       int n, int m, int k) {
+                       const int *labels, randdag_vertex *v, int n, int m,
+                       int k) {
   int p, s;
   mpz_t r, factor, factor0, tmp;
 
@@ -145,7 +141,7 @@ static void _unif_ldag(gmp_randstate_t state, const memo_t memo,
 
 randdag_t ldag_unif_nm(gmp_randstate_t state, const memo_t memo, int n, int m) {
   randdag_t g = randdag_alloc(n);
-  int* labels = calloc(n, sizeof(int));
+  int *labels = calloc(n, sizeof(int));
   _fisher_yates(state, labels, n);
   _unif_ldag(state, memo, labels, g.v, n, m, 1);
   return g;

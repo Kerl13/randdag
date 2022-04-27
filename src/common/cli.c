@@ -15,12 +15,12 @@
    You should have received a copy of the GNU General Public License
    along with this program.  If not, see <https://www.gnu.org/licenses/>. */
 
-#include <malloc.h>     /* malloc, realloc */
-#include <string.h>     /* strcmp */
 #include <gmp.h>        /* mpz_* */
-#include <sys/random.h> /* getrandom (linux only) */
-#include <stdlib.h>     /* strtol, exit */
 #include <limits.h>     /* INT_MAX */
+#include <malloc.h>     /* malloc, realloc */
+#include <stdlib.h>     /* strtol, exit */
+#include <string.h>     /* strcmp */
+#include <sys/random.h> /* getrandom (linux only) */
 
 #include "../../lib/argtable3/argtable3.h"
 #include "cli.h"
@@ -29,9 +29,9 @@
 
 /* Utility function (getline in not available on non-gnu systems) */
 
-static char* mygetline(size_t* n, FILE* stream) {
+static char *mygetline(size_t *n, FILE *stream) {
   size_t capacity;
-  char* buf;
+  char *buf;
   char c;
 
   capacity = 32;
@@ -46,25 +46,26 @@ static char* mygetline(size_t* n, FILE* stream) {
 
     c = getc(stream);
     switch (c) {
-      case EOF:
-        buf[*n] = '\0';
-        (*n)++;
-        return buf;
-      case '\n':
-        buf[*n] = '\n';
-        buf[*n + 1] = '\0';
-        (*n) += 2;
-        return buf;
-      default:
-        buf[*n] = c;
-        (*n)++;
+    case EOF:
+      buf[*n] = '\0';
+      (*n)++;
+      return buf;
+    case '\n':
+      buf[*n] = '\n';
+      buf[*n + 1] = '\0';
+      (*n) += 2;
+      return buf;
+    default:
+      buf[*n] = c;
+      (*n)++;
     }
   }
 }
 
 /* Generic commands */
 
-static int generic_sampler(const char* filename, memo_t memo, __sampler_t sampler, long flags, int M) {
+static int generic_sampler(const char *filename, memo_t memo,
+                           __sampler_t sampler, long flags, int M) {
   FILE *ofile;
   gmp_randstate_t state;
   unsigned long int seed;
@@ -93,7 +94,8 @@ static int generic_sampler(const char* filename, memo_t memo, __sampler_t sample
 
 exit:
   /* Do some cleanups */
-  if (ofile != stdout) fclose(ofile);
+  if (ofile != stdout)
+    fclose(ofile);
   randdag_free(g);
   gmp_randclear(state);
 
@@ -123,9 +125,9 @@ static void generic_counter(__counter_t count, memo_t memo, int M) {
 
 typedef struct cli_options {
   int count;
-  const char* sample_file;
-  const char* dump_file;
-  const char* load_file;
+  const char *sample_file;
+  const char *dump_file;
+  const char *load_file;
 } cli_options;
 
 struct arg_lit *help;
@@ -133,15 +135,22 @@ struct arg_int *count;
 struct arg_file *sample, *dump, *load;
 struct arg_end *end;
 
-static int cli_parse(int argc, char* argv[], cli_options *opts) {
+static int cli_parse(int argc, char *argv[], cli_options *opts) {
   int exitcode, nerrors;
-  void* argtable[6];
+  void *argtable[6];
 
-  argtable[0] = help = arg_litn("h", "help", 0, 1, "display this help and exit");
-  argtable[1] = count = arg_intn("c", "count", "<M>", 0, 1, "count DAGs with up to M edges, defaults to 30");
-  argtable[2] = sample = arg_filen("s", "sample", "<file>", 0, 1, "write a uniform DAG with M edges to <file>");
-  argtable[3] = dump = arg_filen("d", "dump", "<file>", 0, 1, "dump counting info to <file>");
-  argtable[4] = load = arg_filen("l", "load", "<file>", 0, 1, "load counting info from <file>");
+  argtable[0] = help =
+      arg_litn("h", "help", 0, 1, "display this help and exit");
+  argtable[1] = count =
+      arg_intn("c", "count", "<M>", 0, 1,
+               "count DAGs with up to M edges, defaults to 30");
+  argtable[2] = sample =
+      arg_filen("s", "sample", "<file>", 0, 1,
+                "write a uniform DAG with M edges to <file>");
+  argtable[3] = dump =
+      arg_filen("d", "dump", "<file>", 0, 1, "dump counting info to <file>");
+  argtable[4] = load =
+      arg_filen("l", "load", "<file>", 0, 1, "load counting info from <file>");
   argtable[5] = end = arg_end(10);
 
   exitcode = EXIT_SUCCESS;
@@ -179,8 +188,8 @@ exit:
 
 /* Generic command line interface */
 
-int run_cli(int argc, char* argv[],
-            __counter_t counter, __sampler_t sampler, long flags) {
+int run_cli(int argc, char *argv[], __counter_t counter, __sampler_t sampler,
+            long flags) {
 
   cli_options opts = {0, 0, 0, 0};
   int M;
@@ -191,18 +200,20 @@ int run_cli(int argc, char* argv[],
 
   /* Load a pre-existing dump or allocate a fresh one. */
   if (opts.load_file) {
-    FILE* fd = fopen(opts.load_file, "r");
+    FILE *fd = fopen(opts.load_file, "r");
     if (fd) {
       /* Parse the dump header. */
       int N, M2, bound, r;
-      char* line;
+      char *line;
       size_t len;
       line = mygetline(&len, fd);
       r = sscanf(line, "%d %d %d\n", &N, &M2, &bound);
 
       M2 = max(M, M2);
       N = max(M + 1, N);
-      if (r < 3) { bound = N; }
+      if (r < 3) {
+        bound = N;
+      }
 
       memo = memo_alloc(N, M2, bound);
     } else {
@@ -217,7 +228,7 @@ int run_cli(int argc, char* argv[],
   generic_counter(counter, memo, M);
 
   if (opts.dump_file) {
-    FILE* fd = fopen(opts.dump_file, "w");
+    FILE *fd = fopen(opts.dump_file, "w");
     if (fd == NULL) {
       fprintf(stderr, "Cannot open file \"%s\"\n", opts.dump_file);
       return 1;

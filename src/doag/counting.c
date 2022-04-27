@@ -15,17 +15,15 @@
    You should have received a copy of the GNU General Public License
    along with this program.  If not, see <https://www.gnu.org/licenses/>. */
 
+#include <gmp.h>
 #include <malloc.h>
 #include <stdio.h>
-#include <gmp.h>
 
 #include "../../includes/doag.h"
 
-
 #define min(x, y) (((x) < (y)) ? (x) : (y))
 
-
-mpz_t* doag_count(memo_t memo, int n, int m, int k) {
+mpz_t *doag_count(memo_t memo, int n, int m, int k) {
   /* assert(k >= 1); */
   /* assert(n == 1 || k < n); */
   /* assert(n - 1 <= m); */
@@ -49,7 +47,8 @@ mpz_t* doag_count(memo_t memo, int n, int m, int k) {
         for (s = s_start; s <= p - (k == 1); s++) {
           const int q = p - s;
           if (m + (k - 1 + q) * (k - 2 + q) / 2 <= p + (n - 1) * (n - 2) / 2)
-            mpz_addmul(*res, *doag_count(memo, n - 1, m - p, k - 1 + q), factor);
+            mpz_addmul(*res, *doag_count(memo, n - 1, m - p, k - 1 + q),
+                       factor);
           mpz_mul_ui(factor, factor, (n - k - q + 1) * q);
           mpz_divexact_ui(factor, factor, s + 1);
         }

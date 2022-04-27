@@ -15,24 +15,22 @@
    You should have received a copy of the GNU General Public License
    along with this program.  If not, see <https://www.gnu.org/licenses/>. */
 
-#include <malloc.h>
 #include <assert.h>
 #include <gmp.h>
+#include <malloc.h>
 
 #include "../../includes/common.h"
 #include "../../includes/doag.h"
 
 #define min(x, y) (((x) < (y)) ? (x) : (y))
 
-static void _add_src(gmp_randstate_t state,
-                     randdag_vertex* dest,
-                     randdag_vertex* other, int nb_other,
-                     int s, int q) {
+static void _add_src(gmp_randstate_t state, randdag_vertex *dest,
+                     randdag_vertex *other, int nb_other, int s, int q) {
   /* assert(s + q > 0); */
-  randdag_vertex* e;
+  randdag_vertex *e;
   int i;
 
-  const randdag_vertex* sources = other - 1;
+  const randdag_vertex *sources = other - 1;
   dest->out_degree = s + q;
   e = calloc(s + q, sizeof(randdag_vertex));
   dest->out_edges = e;
@@ -43,7 +41,7 @@ static void _add_src(gmp_randstate_t state,
       sources--;
       q--;
     } else {
-      int j = (int)gmp_urandomm_ui(state, nb_other) ;
+      int j = (int)gmp_urandomm_ui(state, nb_other);
       randdag_vertex tmp = other[0];
       other[0] = other[j];
       other[j] = tmp;
@@ -56,7 +54,8 @@ static void _add_src(gmp_randstate_t state,
   }
 }
 
-static void _unif_doag(gmp_randstate_t state, const memo_t memo, randdag_vertex* v, int n, int m, int k) {
+static void _unif_doag(gmp_randstate_t state, const memo_t memo,
+                       randdag_vertex *v, int n, int m, int k) {
   mpz_t r, factor;
   int p, s;
 
