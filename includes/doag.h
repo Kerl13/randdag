@@ -21,25 +21,25 @@
 
 /**
  * Return a pointer to a GMP integer storing the number of DOAGs with:
- * - `n` vertices (including exactly k sources);
+ * - `n` vertices (including exactly `k` sources);
  * - `m` edges;
  * - out-degree bounded by `bound`.
- * If a negative bound is passed, this function counts DOAGs with unbounded
+ * If a non-positive bound is passed, this function counts DOAGs with unbounded
  * out-degree. */
 mpz_t *doag_count(memo_t, int n, int m, int k, int bound);
 
 /**
  * Return a uniform DOAG with:
- * - `n` vertices (including exactly k sources);
+ * - `n` vertices (including exactly `k` sources);
  * - `m` edges;
  * - out-degree bounded by `bound`.
- * If a negative bound is passed, this function samples DOAGs with unbounded
+ * If a non-positive bound is passed, this function counts DOAGs with unbounded
  * out-degree. */
 randdag_t doag_unif_nm(gmp_randstate_t, const memo_t, int n, int m, int bound);
 
 /**
  * Return a uniform DOAG with `m` edges and out-degree bounded by `bound`.
- * If a negative bound is passed, this function samples DOAGs with unbounded
+ * If a non-positive bound is passed, this function samples DOAGs with unbounded
  * out-degree. */
 randdag_t doag_unif_m(gmp_randstate_t, const memo_t, int m, int bound);
 

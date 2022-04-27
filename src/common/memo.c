@@ -28,6 +28,10 @@ memo_t memo_alloc(int N, int M, int bound) {
   mpz_t ***vals;
   memo_t memo;
 
+  /* Non-positive bound means unbounded. */
+  if (bound <= 0)
+    bound = N;
+
   vals = calloc(N - 1, sizeof(mpz_t **));
   for (n = 2; n <= N; n++) {
     vals[n - 2] = calloc(n - 1, sizeof(mpz_t *));
