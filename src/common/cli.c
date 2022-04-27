@@ -70,16 +70,12 @@ static int generic_sampler(const char *filename, memo_t memo,
   gmp_randstate_t state;
   unsigned long int seed;
   randdag_t g;
-  int exitcode;
-
-  exitcode = EXIT_SUCCESS;
 
   /* Setup output file */
   ofile = (strcmp("-", filename) == 0) ? stdout : fopen(filename, "w");
   if (ofile == NULL) {
     fprintf(stderr, "Cannot open file: %s\n", filename);
-    exitcode = EXIT_FAILURE;
-    goto exit;
+    return EXIT_FAILURE;
   }
 
   /* Prepare RNG */
@@ -92,14 +88,13 @@ static int generic_sampler(const char *filename, memo_t memo,
   g = sampler(state, memo, M);
   randdag_to_dot(ofile, g, flags);
 
-exit:
   /* Do some cleanups */
   if (ofile != stdout)
     fclose(ofile);
   randdag_free(g);
   gmp_randclear(state);
 
-  return exitcode;
+  return EXIT_SUCCESS;
 }
 
 static void generic_counter(__counter_t count, memo_t memo, int M) {
