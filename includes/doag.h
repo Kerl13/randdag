@@ -25,7 +25,11 @@
  * - `m` edges;
  * - out-degree bounded by `bound`.
  * If a non-positive bound is passed, this function counts DOAGs with unbounded
- * out-degree. */
+ * out-degree.
+ * The `memo` argument is a memoisation structure (\ref memo_t) and it must have
+ * enough space for storing the result of this function, i.e. its `N`, `M`, and
+ * `bound` fields must be respectively larger or equal to `n`, `m`, and `bound`.
+ * */
 mpz_t *doag_count(memo_t, int n, int m, int k, int bound);
 
 /**
@@ -34,13 +38,21 @@ mpz_t *doag_count(memo_t, int n, int m, int k, int bound);
  * - `m` edges;
  * - out-degree bounded by `bound`.
  * If a non-positive bound is passed, this function counts DOAGs with unbounded
- * out-degree. */
+ * out-degree.
+ * The `memo` argument is a memoisation structure (\ref memo_t) and it must have
+ * enough space for storing the result of this function, i.e. its `N`, `M`, and
+ * `bound` fields must be respectively larger or equal to `n`, `m`, and `bound`.
+ * */
 randdag_t doag_unif_nm(gmp_randstate_t, const memo_t, int n, int m, int bound);
 
 /**
  * Return a uniform DOAG with `m` edges and out-degree bounded by `bound`.
  * If a non-positive bound is passed, this function samples DOAGs with unbounded
- * out-degree. */
+ * out-degree.
+ * The `memo` argument is a memoisation structure (\ref memo_t) and it must have
+ * enough space for storing the result of this function, i.e. its `N`, `M`, and
+ * `bound` fields must be respectively larger or equal to `m+1`, `m`, and
+ * `bound`. */
 randdag_t doag_unif_m(gmp_randstate_t, const memo_t, int m, int bound);
 
 #endif

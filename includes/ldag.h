@@ -19,17 +19,26 @@
 /**
  * Return a pointer to a GMP integer storing the number of LDAGs with:
  * - `n` vertices (including exactly `k` sources);
- * - `m` edges. */
+ * - `m` edges.
+ * The `memo` argument is a memoisation structure (\ref memo_t) and it must have
+ * enough space for storing the result of this function, i.e. its `N` and `M`
+ * fields must be respectively larger or equal to `n` and `m`. */
 mpz_t *ldag_count(memo_t, int n, int m, int k);
 
 /**
  * Return a uniform LDAG with:
  * - `n` vertices (including exactly `k` sources);
- * - `m` edges. */
+ * - `m` edges.
+ * The `memo` argument is a memoisation structure (\ref memo_t) and it must have
+ * enough space for storing the result of this function, i.e. its `N` and `M`
+ * fields must be respectively larger or equal to `n` and `m`. */
 randdag_t ldag_unif_nm(gmp_randstate_t, memo_t, int n, int m);
 
 /**
- * Return a uniform LDAG with `m` edges. */
+ * Return a uniform LDAG with `m` edges.
+ * The `memo` argument is a memoisation structure (\ref memo_t) and it must have
+ * enough space for storing the result of this function, i.e. its `N` and `M`
+ * fields must be respectively larger or equal to `m+1` and `m`. */
 randdag_t ldag_unif_m(gmp_randstate_t, memo_t, int m);
 
 #endif

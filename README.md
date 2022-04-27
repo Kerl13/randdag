@@ -51,6 +51,12 @@ usage: build/doag/doag [-h] [-c <M>] [-s <file>] [-d <file>] [-l <file>]
   -l, --load=<file>    load counting info from <file>
 ```
 
+## Documentation
+
+A succint API documentation can be generated using
+[`doxygen`](https://www.doxygen.nl/index.html).
+To do so, run `make doc` and open a browser at `build/doc/html/index.html`.
+
 
 ## Dependencies and Compliance
 

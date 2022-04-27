@@ -1,0 +1,6 @@
+/**
+ * \mainpage Randdag
+ *
+ * API documentation:
+ * - The doag module: \ref doag.h
+ * - The ldag module: \ref ldag.h */

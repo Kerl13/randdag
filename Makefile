@@ -14,6 +14,13 @@ BUILD  = build/
 all: $(BUILD)libdoag.a $(BUILD)doag/doag
 all: $(BUILD)libldag.a $(BUILD)ldag/ldag
 
+doc:
+	mkdir -p $(BUILD)doc
+	doxygen doxygen.conf
+	@echo ----------------------------------------------------
+	@echo Documentation generated at $(BUILD)doc/html/index.html
+	@echo ----------------------------------------------------
+
 clean:
 	rm -rf $(BUILD)
 
