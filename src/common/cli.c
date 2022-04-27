@@ -15,7 +15,15 @@
    You should have received a copy of the GNU General Public License
    along with this program.  If not, see <https://www.gnu.org/licenses/>. */
 
-#include <gmp.h>        /* mpz_* */
+#include <stdio.h>
+// Keep #include <stdio.h> above #include <gmp.h> as suggested by
+// https://gmplib.org/manual/I_002fO-of-Integers:
+//
+// > When using any of these functions, it is a good idea to include stdio.h
+// > before gmp.h, since that will allow gmp.h to define prototypes for these
+// > functions.
+#include <gmp.h> /* mpz_* */
+
 #include <limits.h>     /* INT_MAX */
 #include <malloc.h>     /* malloc, realloc */
 #include <stdlib.h>     /* strtol, exit */
