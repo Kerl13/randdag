@@ -8,11 +8,10 @@ C library for the counting and uniform generation of various models of DAGs
 
 ### The libraries
 
-Running `make` produces 3 static libraries in the `build/` folder, one for each
+Running `make` produces 2 static libraries in the `build/` folder, one for each
 DAG model:
 
 - `libdoag.a`: Directed Ordered Acyclic Graphs;
-- `libbdoag.a`: Bounded-degree Directed Ordered Acyclic Graphs;
 - `libldag.a`: Labelled Directed Acyclic Graphs.
 
 Each library exposes a function for counting the number of graphs of given
@@ -38,8 +37,8 @@ e.g. `-ldoag -lgmp`.
 
 ### The executables
 
-Running `make` also produces 3 executables `build/doag/doag`,
-`build/bdoag/bdoag` and `build/ldag/ldag`.
+Running `make` also produces 2 executables `build/doag/doag`, and
+`build/ldag/ldag`.
 They provide a command line interface to the counting an sampling functions.
 The executables should be self-documenting, try the `--help` flag:
 

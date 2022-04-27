@@ -26,14 +26,13 @@
 
 static void _add_src(gmp_randstate_t state, randdag_vertex *dest,
                      randdag_vertex *other, int nb_other, int s, int q) {
-  /* assert(s + q > 0); */
-  randdag_vertex *e;
   int i;
-
+  randdag_vertex *e;
   const randdag_vertex *sources = other - 1;
+  /* assert(s + q > 0); */
+
   dest->out_degree = s + q;
-  e = calloc(s + q, sizeof(randdag_vertex));
-  dest->out_edges = e;
+  dest->out_edges = e = calloc(s + q, sizeof(randdag_vertex));
 
   for (i = 0; i < dest->out_degree; i++) {
     if ((int)gmp_urandomm_ui(state, s + q) < q) {
@@ -55,7 +54,7 @@ static void _add_src(gmp_randstate_t state, randdag_vertex *dest,
 }
 
 static void _unif_doag(gmp_randstate_t state, const memo_t memo,
-                       randdag_vertex *v, int n, int m, int k) {
+                       randdag_vertex *v, int n, int m, int k, int bound) {
   mpz_t r, factor;
   int p, s;
 
@@ -71,7 +70,7 @@ static void _unif_doag(gmp_randstate_t state, const memo_t memo,
   if (n == 2) {
     /* assert(m == 1); */
     /* assert(k == 1); */
-    _unif_doag(state, memo, v + 1, 1, 0, 1);
+    _unif_doag(state, memo, v + 1, 1, 0, 1, bound);
     v[0].out_degree = 1;
     v[0].out_edges = calloc(1, sizeof(randdag_vertex));
     v[0].out_edges[0] = v[1];
@@ -80,7 +79,7 @@ static void _unif_doag(gmp_randstate_t state, const memo_t memo,
 
   mpz_init(r);
   mpz_init(factor);
-  mpz_urandomm(r, state, *doag_count(memo, n, m, k));
+  mpz_urandomm(r, state, *doag_count(memo, n, m, k, bound));
 
   /* p = q + s */
   for (p = 1; p <= min(n - k, m + 2 - n); p++) {
@@ -88,10 +87,13 @@ static void _unif_doag(gmp_randstate_t state, const memo_t memo,
     mpz_set_ui(factor, s_start ? ((n - k - p + s_start) * p) : 1);
     for (s = s_start; s <= p - (k == 1); s++) {
       const int q = p - s;
-      if (m + (k - 1 + q) * (k - 2 + q) / 2 <= p + (n - 1) * (n - 2) / 2) {
-        mpz_submul(r, *doag_count(memo, n - 1, m - p, k - 1 + q), factor);
+      const int C2 = min(n - q - k, bound);
+      if (m - p <=
+          (k - 1 + q) * C2 + C2 * (C2 - 1) / 2 + (n - q - k - C2) * bound) {
+        mpz_submul(r, *doag_count(memo, n - 1, m - p, k - 1 + q, bound),
+                   factor);
         if (mpz_sgn(r) == -1) {
-          _unif_doag(state, memo, v + 1, n - 1, m - p, k - 1 + q);
+          _unif_doag(state, memo, v + 1, n - 1, m - p, k - 1 + q, bound);
           _add_src(state, v, v + k + q, n - k - q, s, q);
           mpz_clear(r);
           mpz_clear(factor);
@@ -107,30 +109,37 @@ static void _unif_doag(gmp_randstate_t state, const memo_t memo,
   assert(0);
 }
 
-randdag_t doag_unif_nm(gmp_randstate_t state, const memo_t memo, int n, int m) {
+randdag_t doag_unif_nm(gmp_randstate_t state, const memo_t memo, int n, int m,
+                       int bound) {
   randdag_t g = randdag_alloc(n);
-  _unif_doag(state, memo, g.v, n, m, 1);
+  if (bound <= 0)
+    bound = m; /* The maximum out-degree in the unbounded case is m */
+  _unif_doag(state, memo, g.v, n, m, 1, bound);
   return g;
 }
 
-randdag_t doag_unif_m(gmp_randstate_t state, const memo_t memo, int m) {
+randdag_t doag_unif_m(gmp_randstate_t state, const memo_t memo, int m,
+                      int bound) {
   int n;
   mpz_t r, tot;
   mpz_inits(r, tot, NULL);
 
+  if (bound <= 0)
+    bound = m; /* The maximum out-degree in the unbounded case is m */
+
   for (n = 2; n <= m + 1; n++) {
     if (m <= n * (n - 1) / 2)
-      mpz_add(tot, tot, *doag_count(memo, n, m, 1));
+      mpz_add(tot, tot, *doag_count(memo, n, m, 1, bound));
   }
   mpz_urandomm(r, state, tot);
 
   for (n = 2; n <= m + 1; n++) {
     if (m <= n * (n - 1) / 2) {
-      mpz_sub(r, r, *doag_count(memo, n, m, 1));
+      mpz_sub(r, r, *doag_count(memo, n, m, 1, bound));
       if (mpz_sgn(r) == -1) {
         mpz_clear(r);
         mpz_clear(tot);
-        return doag_unif_nm(state, memo, n, m);
+        return doag_unif_nm(state, memo, n, m, bound);
       }
     }
   }

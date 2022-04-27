@@ -12,7 +12,6 @@ RANLIB = ranlib
 BUILD  = build/
 
 all: $(BUILD)libdoag.a $(BUILD)doag/doag
-all: $(BUILD)libbdoag.a $(BUILD)bdoag/bdoag
 all: $(BUILD)libldag.a $(BUILD)ldag/ldag
 
 clean:
@@ -21,5 +20,4 @@ clean:
 include lib/argtable3/argtable3.mk
 include src/common/common.mk
 include src/doag/doag.mk
-include src/bdoag/bdoag.mk
 include src/ldag/ldag.mk

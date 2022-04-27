@@ -22,13 +22,17 @@
 
 mpz_t zero;
 
+/* TODO: make this a cmd line argument. */
+int bound = -1;
+
 static randdag_t doag_sampler(gmp_randstate_t state, memo_t memo, int M) {
-  return doag_unif_m(state, memo, M);
+  return doag_unif_m(state, memo, M, bound);
 }
 
 static mpz_t *doag_counter(memo_t memo, int n, int m) {
-  if (m <= n * (n - 1) / 2)
-    return doag_count(memo, n, m, 1);
+  const int C = (bound < n) ? bound : n - 1;
+  if (m <= (C + 1) * C / 2 + (n - 1 - C) * bound)
+    return doag_count(memo, n, m, 1, bound);
   else
     return &zero;
 }
