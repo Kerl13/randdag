@@ -55,4 +55,9 @@ randdag_t doag_unif_nm(gmp_randstate_t, const memo_t, int n, int m, int bound);
  * `bound`. */
 randdag_t doag_unif_m(gmp_randstate_t, const memo_t, int m, int bound);
 
+/**
+ * Return a uniform DOAG with `n` edges.
+ * This function does not require counting information. */
+randdag_t doag_unif_n(gmp_randstate_t, int n);
+
 #endif

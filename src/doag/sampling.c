@@ -15,6 +15,9 @@
    You should have received a copy of the GNU General Public License
    along with this program.  If not, see <https://www.gnu.org/licenses/>. */
 
+/* FIXME: REMOVE ME: */
+#include <stdio.h>
+
 #include <assert.h>
 #include <gmp.h>
 #include <malloc.h>
@@ -146,4 +149,103 @@ randdag_t doag_unif_m(gmp_randstate_t state, const memo_t memo, int m,
 
   /* Shouldn't reach this point */
   assert(0);
+}
+
+static int bern_inv_p_fact(gmp_randstate_t state, int p) {
+  int k;
+  for (k = p; k > 1; k--) {
+    if (gmp_urandomm_ui(state, k))
+      return 0;
+  }
+  return 1;
+}
+
+static int bounded_poisson(gmp_randstate_t state, int n) {
+  /* Not optimal */
+  int p;
+  while (1) {
+    p = gmp_urandomm_ui(state, n);
+    if (bern_inv_p_fact(state, p))
+      return p;
+  }
+}
+
+static int doag_unif_n_sim(gmp_randstate_t state, int n, int *params,
+                           int *row_sizes) {
+  int *path;
+  int i, j, streak;
+
+  params[0] = bounded_poisson(state, n - 2);
+  row_sizes[0] = n - 1;
+
+  path = calloc(n, sizeof(int));
+  path[0] = -1;
+  path[1] = 0;
+
+  streak = 1;
+  for (j = 2; j < n - 1; j++) {
+    i = j - 1;
+    params[i] = bounded_poisson(state, n - 1 - i);
+    row_sizes[i] = n - i - 1;
+    while (i >= 0) {
+      if ((int)gmp_urandomm_ui(state, row_sizes[i]) < params[i]) {
+        params[i] -= 1;
+        row_sizes[i] -= 1;
+        i -= 1;
+      } else {
+        row_sizes[i] -= 1;
+        break;
+      }
+    }
+
+    /* Reject if the path is not weakly increasing */
+    if (path[j - 1] > i)
+      goto exit;
+
+    /* Reject if the current streak is not well-ordered */
+    if (path[j - 1] < i) {
+      if (j - streak > 1) {
+        if (!bern_inv_p_fact(state, j - streak))
+          goto exit;
+      }
+      streak = j;
+    }
+
+    path[j] = i;
+  }
+  path[n - 1] = n - 2;
+
+exit:
+  if (j == n - 1) {
+    for (i = 0; i < n; i++) {
+      if (path[i] == i - 1) {
+        printf("%c[0m%c[39m%d ", 0x1B, 0x1B, i);
+      } else {
+        printf("%c[1m%c[31m%d ", 0x1B, 0x1B, i);
+      }
+    }
+    printf("\n");
+  } else {
+    printf("Reject\n");
+  }
+
+  free(path);
+  return (j == n - 1);
+}
+
+randdag_t doag_unif_n(gmp_randstate_t state, int n) {
+  int *params;
+  int *row_sizes;
+  int ok;
+
+  params = calloc(n - 1, sizeof(int));
+  row_sizes = calloc(n - 1, sizeof(int));
+
+  do {
+    ok = doag_unif_n_sim(state, n, params, row_sizes);
+  } while (!ok);
+
+  free(params);
+  free(row_sizes);
+  return randdag_alloc(n); /* TODO: construct this graph */
 }
