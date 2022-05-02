@@ -15,9 +15,6 @@
    You should have received a copy of the GNU General Public License
    along with this program.  If not, see <https://www.gnu.org/licenses/>. */
 
-/* FIXME: REMOVE ME: */
-#include <stdio.h>
-
 #include <assert.h>
 #include <gmp.h>
 #include <malloc.h>
@@ -27,6 +24,9 @@
 
 #define min(x, y) (((x) < (y)) ? (x) : (y))
 
+/* --- Recursive method: main function ------------------------------------ */
+
+/** Auxiliary function: generate on vertex */
 static void _add_src(gmp_randstate_t state, randdag_vertex *dest,
                      randdag_vertex *other, int nb_other, int s, int q) {
   int i;
@@ -56,6 +56,7 @@ static void _add_src(gmp_randstate_t state, randdag_vertex *dest,
   }
 }
 
+/* Core of the recursive method: uniform DOAG of parameters n, m, k */
 static void _unif_doag(gmp_randstate_t state, const memo_t memo,
                        randdag_vertex *v, int n, int m, int k, int bound) {
   mpz_t r, factor;
@@ -112,6 +113,8 @@ static void _unif_doag(gmp_randstate_t state, const memo_t memo,
   assert(0);
 }
 
+/* --- Recursive method: uniform DOAG with n vertex and m edges ----------- */
+
 randdag_t doag_unif_nm(gmp_randstate_t state, const memo_t memo, int n, int m,
                        int bound) {
   randdag_t g = randdag_alloc(n);
@@ -120,6 +123,8 @@ randdag_t doag_unif_nm(gmp_randstate_t state, const memo_t memo, int n, int m,
   _unif_doag(state, memo, g.v, n, m, 1, bound);
   return g;
 }
+
+/* --- Recursive method: uniform DOAG with m edges ------------------------ */
 
 randdag_t doag_unif_m(gmp_randstate_t state, const memo_t memo, int m,
                       int bound) {
@@ -151,6 +156,10 @@ randdag_t doag_unif_m(gmp_randstate_t state, const memo_t memo, int m,
   assert(0);
 }
 
+/* --- Fast rejection method: uniform DOAG with n vertices ---------------- */
+
+/** Bernoulli random variable of parameter 1/p!.
+ * Return 1 with probability 1/p! and 0 with probability 1 - 1/p! */
 static int bern_inv_p_fact(gmp_randstate_t state, int p) {
   int k;
   for (k = p; k > 1; k--) {
@@ -160,8 +169,10 @@ static int bern_inv_p_fact(gmp_randstate_t state, int p) {
   return 1;
 }
 
+/** Poisson random variable of parameter 1 constrained to be < n.
+ * Return 0 <= k < n with probability proportional to 1/k! */
 static int bounded_poisson(gmp_randstate_t state, int n) {
-  /* Not optimal */
+  /* XXX: Not optimal? */
   int p;
   while (1) {
     p = gmp_urandomm_ui(state, n);
@@ -170,15 +181,16 @@ static int bounded_poisson(gmp_randstate_t state, int n) {
   }
 }
 
+/** Simulate the generation of a uniform matrix of variations, but computes just
+ * enough information to know it should be rejected or if it corresponds to a
+ * valid labelled transition matrix of DOAG. */
 static int doag_unif_n_sim(gmp_randstate_t state, int n, int *params,
-                           int *row_sizes) {
-  int *path;
+                           int *row_sizes, int *path) {
   int i, j, streak;
 
   params[0] = bounded_poisson(state, n - 2);
   row_sizes[0] = n - 1;
 
-  path = calloc(n, sizeof(int));
   path[0] = -1;
   path[1] = 0;
 
@@ -213,39 +225,115 @@ static int doag_unif_n_sim(gmp_randstate_t state, int n, int *params,
 
     path[j] = i;
   }
-  path[n - 1] = n - 2;
 
 exit:
-  if (j == n - 1) {
-    for (i = 0; i < n; i++) {
-      if (path[i] == i - 1) {
-        printf("%c[0m%c[39m%d ", 0x1B, 0x1B, i);
-      } else {
-        printf("%c[1m%c[31m%d ", 0x1B, 0x1B, i);
-      }
+  return (j == n - 1);
+}
+
+/**
+ * Take two adjacent arrays of vertices, perform a uniform permutation of the
+ * second array, and perform a uniform shuffling of the first array with the
+ * permuted one.
+ * The permutation and shuffling algorithms are intertwined so that they can be
+ * efficiently implemented in place.
+ * - `n` is the cumulated sizes of both arrays.
+ * - `k` is the size of the first array. */
+static void permut_shuffle(gmp_randstate_t state, randdag_vertex *v, int n,
+                           int k) {
+  randdag_vertex tmp;
+  int r;
+
+  while (n > 0) {
+    tmp = v[n - 1];
+    r = gmp_urandomm_ui(state, n);
+    if (r < k) {
+      /* Take the top element of the left array and put it at the end. */
+      v[n - 1] = v[k - 1];
+      v[k - 1] = tmp;
+      k--;
+    } else {
+      /* Take a uniform element of the right array and put it at the top.
+       * The value of `r` can be used as our uniform index since, in this branch
+       * of the if, it is a uniform integer from [0; n[ constrained to be >= k
+       * i.e. a uniform integer from [k; n[. */
+      v[n - 1] = v[r];
+      v[r] = tmp;
     }
-    printf("\n");
-  } else {
-    printf("Reject\n");
+    n--;
+  }
+}
+
+/** Complete the generation of a valid partial matrix returned by
+ * doag_unif_n_sim. */
+static randdag_t doag_unif_n_populate(gmp_randstate_t state, int n, int *params,
+                                      int *path) {
+  int i, j, p, nb_src;
+  randdag_vertex *cur;
+  randdag_t g = randdag_alloc(n);
+
+  /* The sink */
+  g.v[n - 1].id = n - 1;
+  g.v[n - 1].out_degree = 0;
+  g.v[n - 1].out_edges = NULL;
+
+  for (i = n - 2; i >= 0; i--) {
+    /* Allocate the row */
+    p = params[i];
+    g.v[i].id = i;
+    g.v[i].out_degree = n - 1 - i - p;
+    cur = calloc(g.v[i].out_degree, sizeof(randdag_vertex));
+    g.v[i].out_edges = cur;
+
+    /* Search where row i starts. */
+    j = i + 1;
+    while (path[j] < i) {
+      j++;
+    }
+
+    /* Count the number of sources uncovered at the beginning of this row and
+     * add pointers to them at the beginning of the current vertex.
+     * Their positions will be updated later. */
+    nb_src = 0;
+    while (path[j] == i) {
+      *cur = g.v[j];
+      cur++;
+      j++;
+      nb_src++;
+    }
+
+    while (j < n) {
+      if (!p || (int)gmp_urandomm_ui(state, n - j) > p) {
+        /* Either there is no more zero to insert or the Bern(nb zeroes / nb
+         * remaining spots returned false: add a pointer. */
+        *cur = g.v[j];
+        cur++;
+      } else {
+        /* Insert a zero in the row, aka skip a vertex. */
+        p--;
+      }
+      j++;
+    }
+
+    permut_shuffle(state, g.v[i].out_edges, g.v[i].out_degree, nb_src);
   }
 
-  free(path);
-  return (j == n - 1);
+  free(params);
+  return g;
 }
 
 randdag_t doag_unif_n(gmp_randstate_t state, int n) {
   int *params;
   int *row_sizes;
-  int ok;
+  int *path;
 
   params = calloc(n - 1, sizeof(int));
   row_sizes = calloc(n - 1, sizeof(int));
+  path = calloc(n - 1, sizeof(int));
 
-  do {
-    ok = doag_unif_n_sim(state, n, params, row_sizes);
-  } while (!ok);
+  /* Repeat doag_unif_n_sim util it finds a valid transition matrix. */
+  while (!doag_unif_n_sim(state, n, params, row_sizes, path)) {
+  }
 
-  free(params);
   free(row_sizes);
-  return randdag_alloc(n); /* TODO: construct this graph */
+  return doag_unif_n_populate(state, n, params, path);
 }
