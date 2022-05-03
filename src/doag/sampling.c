@@ -24,6 +24,9 @@
 
 #define min(x, y) (((x) < (y)) ? (x) : (y))
 
+/* TODO: REMOVE ME */
+#include <stdio.h>
+
 /* --- Recursive method: main function ------------------------------------ */
 
 /** Auxiliary function: generate on vertex */
@@ -184,12 +187,14 @@ static int bounded_poisson(gmp_randstate_t state, int n) {
 /** Simulate the generation of a uniform matrix of variations, but computes just
  * enough information to know it should be rejected or if it corresponds to a
  * valid labelled transition matrix of DOAG. */
-static int doag_unif_n_sim(gmp_randstate_t state, int n, int *params,
-                           int *row_sizes, int *path) {
+static int doag_unif_n_sim(gmp_randstate_t state, randdag_t *g, int n,
+                           int *nb_zeros, int *nb_unknown, int *path) {
   int i, j, streak;
 
-  params[0] = bounded_poisson(state, n - 2);
-  row_sizes[0] = n - 1;
+  /* Source of the graph */
+  nb_zeros[0] = bounded_poisson(state, n - 2);
+  g->v[0].out_degree = n - 1 - nb_zeros[0];
+  nb_unknown[0] = n - 2;
 
   path[0] = -1;
   path[1] = 0;
@@ -197,15 +202,17 @@ static int doag_unif_n_sim(gmp_randstate_t state, int n, int *params,
   streak = 1;
   for (j = 2; j < n - 1; j++) {
     i = j - 1;
-    params[i] = bounded_poisson(state, n - 1 - i);
-    row_sizes[i] = n - i - 1;
+    nb_zeros[i] = bounded_poisson(state, n - 1 - i);
+    nb_unknown[i] = n - i - 1;
+    g->v[i].out_degree = n - 1 - i - nb_zeros[i];
+
     while (i >= 0) {
-      if ((int)gmp_urandomm_ui(state, row_sizes[i]) < params[i]) {
-        params[i] -= 1;
-        row_sizes[i] -= 1;
+      if ((int)gmp_urandomm_ui(state, nb_unknown[i]) < nb_zeros[i]) {
+        nb_zeros[i] -= 1;
+        nb_unknown[i] -= 1;
         i -= 1;
       } else {
-        row_sizes[i] -= 1;
+        nb_unknown[i] -= 1;
         break;
       }
     }
@@ -225,6 +232,14 @@ static int doag_unif_n_sim(gmp_randstate_t state, int n, int *params,
 
     path[j] = i;
   }
+
+  g->v[n - 2].out_degree = 1;
+  nb_zeros[n - 2] = 0;
+  nb_unknown[n - 2] = 0;
+  path[n - 1] = n - 2;
+
+  nb_zeros[n - 1] = 0;
+  nb_unknown[n - 1] = 0;
 
 exit:
   return (j == n - 1);
@@ -265,24 +280,23 @@ static void permut_shuffle(gmp_randstate_t state, randdag_vertex *v, int n,
 
 /** Complete the generation of a valid partial matrix returned by
  * doag_unif_n_sim. */
-static randdag_t doag_unif_n_populate(gmp_randstate_t state, int n, int *params,
-                                      int *path) {
+static void doag_unif_n_populate(gmp_randstate_t state, randdag_t *g, int n,
+                                 int *nb_zeros, int *path) {
   int i, j, p, nb_src;
   randdag_vertex *cur;
-  randdag_t g = randdag_alloc(n);
 
   /* The sink */
-  g.v[n - 1].id = n - 1;
-  g.v[n - 1].out_degree = 0;
-  g.v[n - 1].out_edges = NULL;
+  g->v[n - 1].out_edges = NULL;
 
   for (i = n - 2; i >= 0; i--) {
     /* Allocate the row */
-    p = params[i];
-    g.v[i].id = i;
-    g.v[i].out_degree = n - 1 - i - p;
-    cur = calloc(g.v[i].out_degree, sizeof(randdag_vertex));
-    g.v[i].out_edges = cur;
+    p = nb_zeros[i];
+    assert(g->v[i].out_degree > 0);
+    cur = calloc(g->v[i].out_degree, sizeof(randdag_vertex));
+    g->v[i].out_edges = cur;
+
+    if (i == n - 2)
+      assert(p == 0);
 
     /* Search where row i starts. */
     j = i + 1;
@@ -295,17 +309,23 @@ static randdag_t doag_unif_n_populate(gmp_randstate_t state, int n, int *params,
      * Their positions will be updated later. */
     nb_src = 0;
     while (path[j] == i) {
-      *cur = g.v[j];
+      assert(j > i);
+      *cur = g->v[j];
+      assert(cur->id > i);
+      assert(cur->id == j);
       cur++;
       j++;
       nb_src++;
     }
 
     while (j < n) {
+      assert(j > i);
       if (!p || (int)gmp_urandomm_ui(state, n - j) > p) {
         /* Either there is no more zero to insert or the Bern(nb zeroes / nb
          * remaining spots returned false: add a pointer. */
-        *cur = g.v[j];
+        *cur = g->v[j];
+        assert(cur->id > i);
+        assert(cur->id == j);
         cur++;
       } else {
         /* Insert a zero in the row, aka skip a vertex. */
@@ -313,27 +333,36 @@ static randdag_t doag_unif_n_populate(gmp_randstate_t state, int n, int *params,
       }
       j++;
     }
+    assert(j == n);
 
-    permut_shuffle(state, g.v[i].out_edges, g.v[i].out_degree, nb_src);
+    permut_shuffle(state, g->v[i].out_edges, g->v[i].out_degree, nb_src);
   }
-
-  free(params);
-  return g;
 }
 
 randdag_t doag_unif_n(gmp_randstate_t state, int n) {
-  int *params;
-  int *row_sizes;
+  int i;
+  int *nb_zeros;
+  int *nb_unknown;
   int *path;
+  randdag_t g = randdag_alloc(n);
 
-  params = calloc(n - 1, sizeof(int));
-  row_sizes = calloc(n - 1, sizeof(int));
-  path = calloc(n - 1, sizeof(int));
+  nb_zeros = calloc(n, sizeof(int));
+  nb_unknown = calloc(n, sizeof(int));
+  path = calloc(n, sizeof(int));
 
-  /* Repeat doag_unif_n_sim util it finds a valid transition matrix. */
-  while (!doag_unif_n_sim(state, n, params, row_sizes, path)) {
+  /* Prepare the graph */
+  for (i = 0; i < n; i++) {
+    g.v[i].id = i;
   }
 
-  free(row_sizes);
-  return doag_unif_n_populate(state, n, params, path);
+  /* Repeat doag_unif_n_sim util it finds a valid transition matrix. */
+  while (!doag_unif_n_sim(state, &g, n, nb_zeros, nb_unknown, path)) {
+  }
+  free(nb_unknown);
+
+  doag_unif_n_populate(state, &g, n, nb_zeros, path);
+  free(nb_zeros);
+  free(path);
+
+  return g;
 }
