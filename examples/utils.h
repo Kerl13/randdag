@@ -22,4 +22,9 @@ int parse_int(const char *usage_string, /* usage string */
  * Returns a non-zero value in case of an error. */
 int parse_one_int(const char *usage_string, int argc, char **argv, int *n);
 
+/** Parse three integers from the command line and store them in n, m and k.
+ * Returns a non-zero value in case of an error. */
+int parse_three_ints(const char *usage_string, int argc, char **argv, int *n,
+                     int *m, int *k);
+
 #endif
