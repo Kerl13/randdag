@@ -173,14 +173,66 @@ static int bern_inv_p_fact(gmp_randstate_t state, int p) {
 }
 
 /** Poisson random variable of parameter 1 constrained to be < n.
- * Return 0 <= k < n with probability proportional to 1/k! */
+ * Return 0 <= k < n with probability proportional to 1/k!
+ * This is Knuth's poisson generator [1] + a rejection procedure when the result
+ * is larger than n.
+ *
+ * [1] https://en.wikipedia.org/wiki/Poisson_distribution#Computational_methods
+ */
 static int bounded_poisson(gmp_randstate_t state, int n) {
-  /* XXX: Not optimal? */
-  int p;
+  int k;
+  double p;
+
+  /* exp(-1) */
+  static const double r =
+      0.3678794411714423215955237701614608674458111310317678345078368016;
+
   while (1) {
-    p = gmp_urandomm_ui(state, n);
-    if (bern_inv_p_fact(state, p))
-      return p;
+    p = 1.0;
+    k = 0;
+    while (k < n) {
+      /* This generates a uniform double in [0; 1] and multiplies it by p.
+       * Thank you C89 for not providing the 0x1.0p-53 syntax, thus forcing me
+       * to write this big ugly constant <3 */
+      p = p * gmp_urandomb_ui(state, 53) * 1.110223024625156540423631668090e-16;
+      if (p < r) {
+        return k;
+      }
+      k++;
+    }
+  }
+}
+
+/**
+ * Take two adjacent arrays of vertices, perform a uniform permutation of the
+ * second array, and perform a uniform shuffling of the first array with the
+ * permuted one.
+ * The permutation and shuffling algorithms are intertwined so that they can be
+ * efficiently implemented in place.
+ * - `n` is the cumulated sizes of both arrays.
+ * - `k` is the size of the first array. */
+static void permut_shuffle(gmp_randstate_t state, randdag_vertex *v, int n,
+                           int k) {
+  randdag_vertex tmp;
+  int r;
+
+  while (n > 0) {
+    tmp = v[n - 1];
+    r = gmp_urandomm_ui(state, n);
+    if (r < k) {
+      /* Take the top element of the left array and put it at the end. */
+      v[n - 1] = v[k - 1];
+      v[k - 1] = tmp;
+      k--;
+    } else {
+      /* Take a uniform element of the right array and put it at the top.
+       * The value of `r` can be used as our uniform index since, in this branch
+       * of the if, it is a uniform integer from [0; n[ constrained to be >= k
+       * i.e. a uniform integer from [k; n[. */
+      v[n - 1] = v[r];
+      v[r] = tmp;
+    }
+    n--;
   }
 }
 
@@ -245,39 +297,6 @@ exit:
   return (j == n - 1);
 }
 
-/**
- * Take two adjacent arrays of vertices, perform a uniform permutation of the
- * second array, and perform a uniform shuffling of the first array with the
- * permuted one.
- * The permutation and shuffling algorithms are intertwined so that they can be
- * efficiently implemented in place.
- * - `n` is the cumulated sizes of both arrays.
- * - `k` is the size of the first array. */
-static void permut_shuffle(gmp_randstate_t state, randdag_vertex *v, int n,
-                           int k) {
-  randdag_vertex tmp;
-  int r;
-
-  while (n > 0) {
-    tmp = v[n - 1];
-    r = gmp_urandomm_ui(state, n);
-    if (r < k) {
-      /* Take the top element of the left array and put it at the end. */
-      v[n - 1] = v[k - 1];
-      v[k - 1] = tmp;
-      k--;
-    } else {
-      /* Take a uniform element of the right array and put it at the top.
-       * The value of `r` can be used as our uniform index since, in this branch
-       * of the if, it is a uniform integer from [0; n[ constrained to be >= k
-       * i.e. a uniform integer from [k; n[. */
-      v[n - 1] = v[r];
-      v[r] = tmp;
-    }
-    n--;
-  }
-}
-
 /** Complete the generation of a valid partial matrix returned by
  * doag_unif_n_sim. */
 static void doag_unif_n_populate(gmp_randstate_t state, randdag_t *g, int n,
@@ -339,6 +358,7 @@ static void doag_unif_n_populate(gmp_randstate_t state, randdag_t *g, int n,
   }
 }
 
+/** Main function: generate a uniform DOAG of size n */
 randdag_t doag_unif_n(gmp_randstate_t state, int n) {
   int i;
   int *nb_zeros;
