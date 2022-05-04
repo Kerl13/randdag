@@ -51,6 +51,13 @@ usage: build/doag/doag [-h] [-c <M>] [-s <file>] [-d <file>] [-l <file>]
   -l, --load=<file>    load counting info from <file>
 ```
 
+## Examples
+
+Well-documented examples of use of the randdag libraries can be found in the
+`examples` folder.
+Take a look at the code and run make from this folder for building the examples.
+
+
 ## Documentation
 
 A succint API documentation can be generated using
@@ -83,6 +90,7 @@ The executables have a few more compatibility requirements:
   pseudo-random number generator. This might change in the future.
 
 - The executables are C99-compliant.
+
 
 ## License
 

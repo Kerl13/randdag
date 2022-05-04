@@ -46,3 +46,21 @@ int parse_int(const char *usage_string, const char *progname, int *argc,
   /* At this point it is safe to cast to int */
   return (int)res;
 }
+
+int parse_one_int(const char *usage_string, int argc, char **argv, int *n) {
+  char *progname;
+
+  if ((progname = next_argument(&argc, &argv)) == NULL)
+    return 1;
+
+  if ((*n = parse_int(usage_string, progname, &argc, &argv)) == -1)
+    return 1;
+
+  if (argc != 0) {
+    fprintf(stderr, "Too many arguments\n");
+    fprintf(stderr, usage_string, progname);
+    return 1;
+  }
+
+  return 0;
+}

@@ -1,36 +1,34 @@
-#include "utils.h" /* Boring command line parsing stuff. */
+#include "utils.h"
 #include <gmp.h>
 #include <stdio.h>
 
 #include "../includes/doag.h"
 
+/*
+ * This file demonstrates how to sample uniform DOAGs with n vertices using
+ * libdoag's doag_unif_n function.
+ * The algorithm used in this function does not require any pre-processing.
+ *
+ * Compile with: utils.c -ldoag -lgmp
+ *
+ * Example: running `doag_n.exe 10 > doag.dot` from the command line will
+ * generate a uniform random DOAG with 10 vertices and store it to `doag.dot`
+ * (in graphviz' dot format).
+ * You can visualise the result by running `dot -Tpdf doag.dot -o doag.pdf`.
+ *
+ * NB. utils.c handles boring command line parsing stuff and is only here to
+ * allow you to play the executable. You should drop it and replace the
+ * `parse_one_int` call below with something more appropriate in your own code.
+ */
+
 const char *usage_string = "USAGE: %s N\nSamples a DOAG of size N.\n";
-
-/* Command line parsing */
-static int parse_args(int argc, char **argv, int *n) {
-  char *progname;
-
-  if ((progname = next_argument(&argc, &argv)) == NULL)
-    return 1;
-
-  if ((*n = parse_int(usage_string, progname, &argc, &argv)) == -1)
-    return 1;
-
-  if (argc != 0) {
-    fprintf(stderr, "Too many arguments\n");
-    fprintf(stderr, usage_string, progname);
-    return 1;
-  }
-
-  return 0;
-}
 
 int main(int argc, char **argv) {
   int n;
   gmp_randstate_t prng;
 
   /* Get the number of vertices from the command line */
-  if (parse_args(argc, argv, &n) != 0)
+  if (parse_one_int(usage_string, argc, argv, &n) != 0)
     return 1;
 
   /* Don't forget to initialise the PRNG */

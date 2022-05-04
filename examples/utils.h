@@ -18,4 +18,8 @@ int parse_int(const char *usage_string, /* usage string */
               int *argc,                /* a pointer to argc */
               char ***argv);            /* a pointer to argv */
 
+/** Parse one integer from the command line and store it in n.
+ * Returns a non-zero value in case of an error. */
+int parse_one_int(const char *usage_string, int argc, char **argv, int *n);
+
 #endif
