@@ -57,8 +57,12 @@ void randdag_to_dot(FILE *fd, const randdag_t g, unsigned int flags) {
     if (flags & RD_DOT_LABELLED)
       fprintf(fd, " [label=\"%d\"]", u.id);
     fprintf(fd, "\n");
-    for (j = 0; j < u.out_degree; j++) {
-      fprintf(fd, "  n%d -> n%d\n", u.id, u.out_edges[j].id);
+    if (u.out_degree > 0) {
+      fprintf(fd, "  n%d -> {n%d", u.id, u.out_edges[0].id);
+      for (j = 1; j < u.out_degree; j++) {
+        fprintf(fd, ", n%d", u.out_edges[j].id);
+      }
+      fprintf(fd, "}\n");
     }
   }
 
