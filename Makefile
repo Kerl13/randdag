@@ -3,7 +3,7 @@
 .SUFFIXES:
 
 CC     = cc
-CFLAGS = -Wall -Wextra -pedantic -Wmissing-prototypes -O2 -ansi
+CFLAGS = -Wall -Wextra -pedantic -Wmissing-prototypes -O2 -ansi -g
 LDLIBS = -lgmp
 AR     = ar
 RANLIB = ranlib
@@ -21,10 +21,15 @@ doc:
 	@echo Documentation generated at $(BUILD)doc/html/index.html
 	@echo ----------------------------------------------------
 
+test: doag-tests
+
 clean:
 	rm -rf $(BUILD)
 
 include lib/argtable3/argtable3.mk
+
 include src/common/common.mk
 include src/doag/doag.mk
 include src/ldag/ldag.mk
+
+include tests/doag/build.mk
