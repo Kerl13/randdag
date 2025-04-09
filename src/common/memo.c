@@ -55,6 +55,7 @@ memo_t memo_alloc(int N, int M, int bound) {
   memo.zero = malloc(sizeof(mpz_t));
   memo.one = malloc(sizeof(mpz_t));
   mpz_init_set_ui(*memo.one, 1);
+  mpz_init_set_ui(*memo.zero, 0);
 
   return memo;
 }
