@@ -17,6 +17,8 @@ typedef struct {
   int M;
   /** The maximum out-degree of the graphs that this structure can count */
   int bound;
+  /* XXX. The integer 0. Leave this undocumented. */
+  mpz_t *zero;
   /* XXX. The integer 1. Leave this undocumented. */
   mpz_t *one;
   /** The array in which counting information is stored. Never manipulate this

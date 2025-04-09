@@ -15,9 +15,10 @@
    You should have received a copy of the GNU General Public License
    along with this program.  If not, see <https://www.gnu.org/licenses/>. */
 
-#include <gmp.h>
 #include <malloc.h>
 #include <stdio.h>
+
+#include <gmp.h>
 
 #include "../../includes/common.h"
 
@@ -51,6 +52,7 @@ memo_t memo_alloc(int N, int M, int bound) {
   memo.N = N;
   memo.M = M;
   memo.bound = bound;
+  memo.zero = malloc(sizeof(mpz_t));
   memo.one = malloc(sizeof(mpz_t));
   mpz_init_set_ui(*memo.one, 1);
 
@@ -75,7 +77,9 @@ void memo_free(memo_t memo) {
   }
 
   free(memo.vals);
+  mpz_clear(*memo.zero);
   mpz_clear(*memo.one);
+  free(memo.zero);
   free(memo.one);
 }
 
