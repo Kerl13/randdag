@@ -70,8 +70,7 @@ static mpz_t *_doag_count(memo_t memo, int n, int m, int k, int bound) {
        It follows that
            max(0, p - (n-k)) = 0 <= i
        and
-           i <= min(p, p + k - 2, m - n + k) = min(p - indic(k==1), m-n+k)
-       */
+           i <= min(p, p + k - 2, m - n + k) = min(p - indic(k==1), m-n+k) */
     for (p = 0; p <= min(C, m); p++) {
       mpz_set_ui(factor, 1);
       for (i = 0; i <= min(p - (k == 1), m - n + k); i++) {
@@ -88,10 +87,7 @@ static mpz_t *_doag_count(memo_t memo, int n, int m, int k, int bound) {
     }
     mpz_clear(factor);
 
-    if (mpz_sgn(*res) == 0)
-      fprintf(stderr, "[ERROR] DOAG n=%d m=%d k=%d   -> 0\n", n, m, k);
     assert(mpz_sgn(*res) > 0);
-
     return res;
   }
 }
@@ -107,9 +103,9 @@ mpz_t *doag_count(memo_t memo, int n, int m, int k, int bound) {
 
   if (bound < 0)
     bound = n;
-
   C = min(bound, n - k);
-  /* Se the comment at the top of _doag_count for the explanations on each of
+
+  /* See the comment at the top of _doag_count for the explanations on each of
    * these conditions. */
   if ((n < 0) || ((n > 0) > k) || (k > n) || (n - k > m) ||
       (m > C * (C - 1) / 2 + (n - C) * C)) {
