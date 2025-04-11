@@ -110,7 +110,7 @@ static int generic_sampler(const char *filename, memo_t memo,
 
 static void generic_counter(__counter_t count, memo_t memo, int N, int M,
                             int bound) {
-  int n, m, k;
+  int n, m, k, max_m;
   mpz_t sum;
 
   mpz_init(sum);
@@ -122,11 +122,15 @@ static void generic_counter(__counter_t count, memo_t memo, int N, int M,
   if (bound >= 0)
     printf(", and out-degree bounded by %d", bound);
   printf(":\n");
+
+  /* Counting. */
   for (n = 0; n <= N; n++) {
     mpz_set_ui(sum, 0);
     for (k = (n > 0); k <= n; k++) {
       const int C = min(n - k, (bound < 0 ? n : bound));
-      for (m = n - k; m <= min((C * (C - 1)) / 2 + (n - C) * C, M); m++) {
+      max_m = (C * (C - 1)) / 2 + (n - C) * C;
+      max_m = M < 0 ? max_m : min(max_m, M);
+      for (m = n - k; m <= max_m; m++) {
         mpz_add(sum, sum, *count(memo, n, m, k, bound));
       }
     }
