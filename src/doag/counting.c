@@ -92,12 +92,6 @@ static mpz_t *_doag_count(memo_t memo, int n, int m, int k, int bound) {
   }
 }
 
-mpz_t *doag_unsafe_count(memo_t memo, int n, int m, int k, int bound) {
-  if (bound < 0)
-    bound = n;
-  return _doag_count(memo, n, m, k, bound);
-}
-
 mpz_t *doag_count(memo_t memo, int n, int m, int k, int bound) {
   int C;
 

@@ -33,16 +33,6 @@
 mpz_t *doag_count(memo_t, int n, int m, int k, int bound);
 
 /**
- * Same as \ref doag_count but assumes that there exists at least one DOAG with
- * `n` vertices, `m` edges, `k` sources, and with out-degree at most `bound`.
- * that there exists. If it is not the case, the result is unspecified.
- *
- * In practice, this function skips a check and may perform an invalid array
- * access in the memoisation table if the above condition does not hold.
- */
-mpz_t *doag_unsafe_count(memo_t, int n, int m, int k, int bound);
-
-/**
  * Return a uniform DOAG with:
  * - `n` vertices (including exactly `k` sources);
  * - `m` edges;
