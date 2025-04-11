@@ -16,16 +16,14 @@
  *    ordering of the out-edges in the data-structure is not an implementation
  *    artifact: two graphs with different ordering of the out-edges are
  *    considered different.
- * 3. They have only one sink (i.e. vertex with no out-edges).
  */
 
 /**
  * Return a pointer to a GMP integer storing the number of DOAGs with:
  * - `n` vertices (including exactly `k` sources);
  * - `m` edges;
- * - out-degree bounded by `bound`.
- * If a non-positive bound is passed, this function counts DOAGs with unbounded
- * out-degree.
+ * - out-degree bounded by `bound` (if a negative bound is passed, this function
+ *   counts DOAGs with unbounded out-degree).
  * The `memo` argument is a memoisation structure (\ref memo_t) and it must have
  * enough space for storing the result of this function, i.e. its `N`, `M`, and
  * `bound` fields must be respectively larger or equal to `n`, `m`, and `bound`.
