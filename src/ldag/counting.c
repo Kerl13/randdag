@@ -26,67 +26,98 @@
 
 #define min(x, y) (((x) < (y)) ? (x) : (y))
 
-mpz_t __two;
-int __two_set = 0;
+static mpz_t *_ldag_count(memo_t memo, int n, int m, int k, int bound) {
+  const int C = min(bound, n - k);
 
-mpz_t *ldag_count(memo_t memo, int n, int m, int k) {
-  /* assert(k >= 1); */
-  /* assert(n == 1 || k < n); */
-  /* assert(n - 1 <= m); */
-  /* assert(m <= n * (n - 1) / 2 - k * (k - 1) / 2); */
-  if (n == 1) {
-    /* assert(k == 1); */
-    /* assert(m == n - 1); */
+  /* As an optimisation, we try very hard to call this function only for
+   * arguments such that DAG(n,m,k,bound) > 0. Using various
+   * combinatorial arguments, we get the following conditions on (n,m,k,bound).
+   * They are expressed as asserts for easier debugging. */
+
+  /* Negative parameters are absurd. */
+  assert(bound >= 0);
+  assert(n >= 0);
+  /* At most n sources and at least one except for the empty graph. */
+  assert((n > 0) <= k && k <= n);
+  /* At least (n-k) edge: one for each internal vertex.
+   * At most one C out-edges per source + max(bound,n-k-i) for the i-th internal
+   * vertex. */
+  assert(n - k <= m && m <= C * (C - 1) / 2 + (n - C) * C);
+
+  if (n <= 1) {
     return memo.one;
-  } else if (n == 2) {
-    /* assert(k == 1); */
-    /* assert(m == n - 1); */
-    /* XXX. Super ugly… */
-    if (!__two_set) {
-      mpz_init_set_ui(__two, 2);
-      __two_set = 1;
-    }
-    return &__two;
   } else {
-    mpz_t *res = memo_get_ptr(memo, n, m, k);
-    if (mpz_sgn(*res) == 0) {
-      int p, s;
-      mpz_t factor, factor0;
+    int p, i;
+    mpz_t factor, factor0, *res = memo_get_ptr(memo, n, m, k);
 
-      /* Invariant: factor = binomial(n - k - q, s) * binomial(k - 1 + q, q) */
-      mpz_init(factor);
+    /* Memoisation. */
+    if (mpz_sgn(*res) != 0)
+      return res;
 
-      /* Invariant: factor0 = factor(s=0) = binomial(k - 1 + p, p) */
-      mpz_init_set_ui(factor0, 1);
+    mpz_init_set_ui(factor, 1);
+    mpz_init_set_ui(factor0, 1);
 
-      for (p = 1; p <= min(n - k, m + 2 - n); p++) {
-        const int s_start = (p == n - k);
+    /* For the invariant to hold recursively, we must have:
+       1. Condition on the number of sources:
+          1 <= k - 1 + p - i <= n - 1, which is equivalent to
+          p - (n-k) <= i <= p + (k-2)
+       2. Condition on the number of edges:
+          n - k - p + i <= m - p <= C2(C2 - 1)/2 + C2(n - 1 - C2)
+          with C2 = min(bound, n - k - (p - i))
+       In addition, by definition we have 0 <= i <= p.
 
-        mpz_mul_ui(factor0, factor0, k - 1 + p);
-        mpz_divexact_ui(factor0, factor0, p);
-        mpz_set(factor, factor0);
+       It follows that
+           max(0, p - (n-k)) = 0 <= i
+       and
+           i <= min(p, p + k - 2, m - n + k) = min(p - indic(k==1), m-n+k) */
 
-        if (s_start == 1) {
-          mpz_mul_ui(factor, factor, p * (n - k - p + 1));
-          mpz_divexact_ui(factor, factor, k - 1 + p);
+    for (p = 0; p <= min(C, m); p++) {
+      /* Loop invariants:
+       * - factor = binomial(n - k - p + i, i) * binomial(k - 1 + p - i, p - i)
+       * - factor0 = factor(i=0) = binomial(k - 1 + p, p) */
+
+      for (i = 0; i <= min(p - (k == 1), m - n + k); i++) {
+        const int C2 = min(n - k - (p - i), bound);
+        if (m - p <= (C2 * (C2 - 1)) / 2 + C2 * (n - 1 - C2)) {
+          mpz_addmul(*res,
+                     *_ldag_count(memo, n - 1, m - p, k - 1 + p - i, bound),
+                     factor);
         }
 
-        for (s = s_start; s <= p - (k == 1); s++) {
-          const int q = p - s;
-          const int kk = k - 1 + q;
-          if (m + kk * (kk - 1) / 2 <= p + (n - 1) * (n - 2) / 2)
-            mpz_addmul(*res, *ldag_count(memo, n - 1, m - p, kk), factor);
-
-          mpz_mul_ui(factor, factor, (n - k - q + 1) * q);
-          mpz_divexact_ui(factor, factor, (s + 1) * kk);
-        }
+        /* Update factor for the next iteration. */
+        mpz_mul_ui(factor, factor, (n - k - p + i + 1) * (p - i));
+        mpz_divexact_ui(factor, factor, (i + 1) * (k - 1 + p - i));
       }
-      mpz_mul_ui(*res, *res, n);
-      mpz_divexact_ui(*res, *res, k);
 
-      mpz_clear(factor);
-      mpz_clear(factor0);
+      /* Update factor0 for the next iteration. Reset factor to factor0. */
+      mpz_mul_ui(factor0, factor0, k + p);
+      mpz_divexact_ui(factor0, factor0, p + 1);
+      mpz_set(factor, factor0);
     }
+    mpz_mul_ui(*res, *res, n);
+    mpz_divexact_ui(*res, *res, k);
+
+    mpz_clear(factor);
+    mpz_clear(factor0);
+
+    assert(mpz_sgn(*res) > 0);
     return res;
   }
+}
+
+mpz_t *ldag_count(memo_t memo, int n, int m, int k, int bound) {
+  int C;
+
+  if (bound < 0)
+    bound = n;
+  C = min(bound, n - k);
+
+  /* See the comment at the top of _ldag_count for the explanations on each of
+   * these conditions. */
+  if ((n < 0) || ((n > 0) > k) || (k > n) || (n - k > m) ||
+      (m > C * (C - 1) / 2 + (n - C) * C)) {
+    return memo.zero;
+  }
+
+  return _ldag_count(memo, n, m, k, bound);
 }

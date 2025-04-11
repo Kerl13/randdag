@@ -98,7 +98,7 @@ static void _unif_ldag(gmp_randstate_t state, const memo_t memo,
   mpz_init_set_ui(factor0, 1);
   mpz_init(tmp);
 
-  mpz_init_set(tmp, *ldag_count(memo, n, m, k));
+  mpz_init_set(tmp, *ldag_count(memo, n, m, k, -1));
   mpz_mul_ui(tmp, tmp, k);
   mpz_divexact_ui(tmp, tmp, n);
 
@@ -121,7 +121,7 @@ static void _unif_ldag(gmp_randstate_t state, const memo_t memo,
       const int q = p - s;
       const int kk = k - 1 + q;
       if (m + kk * (kk - 1) / 2 <= p + (n - 1) * (n - 2) / 2) {
-        mpz_submul(r, *ldag_count(memo, n - 1, m - p, kk), factor);
+        mpz_submul(r, *ldag_count(memo, n - 1, m - p, kk, -1), factor);
         if (mpz_sgn(r) < 0) {
           _unif_ldag(state, memo, labels + 1, v + 1, n - 1, m - p, kk);
           _add_src(state, v, v + kk + 1, kk, n - 1 - kk, s, q);
@@ -154,13 +154,13 @@ randdag_t ldag_unif_m(gmp_randstate_t state, const memo_t memo, int m) {
 
   for (n = 2; n <= m + 1; n++) {
     if (m <= n * (n - 1) / 2)
-      mpz_add(tot, tot, *ldag_count(memo, n, m, 1));
+      mpz_add(tot, tot, *ldag_count(memo, n, m, 1, -1));
   }
   mpz_urandomm(r, state, tot);
 
   for (n = 2; n <= m + 1; n++) {
     if (m <= n * (n - 1) / 2) {
-      mpz_sub(r, r, *ldag_count(memo, n, m, 1));
+      mpz_sub(r, r, *ldag_count(memo, n, m, 1, -1));
       if (mpz_sgn(r) == -1) {
         mpz_clear(r);
         mpz_clear(tot);

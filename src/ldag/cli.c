@@ -24,14 +24,6 @@ static randdag_t sampler(gmp_randstate_t s, memo_t memo, int m) {
   return ldag_unif_m(s, memo, m);
 }
 
-static mpz_t *counter(memo_t memo, int n, int m, int k, int bound) {
-  (void)bound; /* FIXME: implement bounded dag counting. */
-  if (n - k <= m && k * (n - k) + ((n - k) * (n - k - 1)) / 2)
-    return ldag_count(memo, n, m, k);
-  else
-    return memo.zero;
-}
-
 int main(int argc, char *argv[]) {
-  return run_cli(argc, argv, counter, sampler, RD_DOT_LABELLED);
+  return run_cli(argc, argv, ldag_count, sampler, RD_DOT_LABELLED);
 }
