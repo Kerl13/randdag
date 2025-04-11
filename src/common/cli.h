@@ -21,7 +21,8 @@
 #include "../../includes/common.h" /* randdag_t */
 #include <gmp.h>                   /* gmp_randstate_t */
 
-typedef randdag_t (*__sampler_t)(gmp_randstate_t, memo_t, int N);
+typedef randdag_t (*__sampler_t)(gmp_randstate_t, memo_t, int n, int m,
+                                 int bound);
 typedef mpz_t *(*__counter_t)(memo_t, int n, int m, int k, int bound);
 
 int run_cli(int argc, char *argv[], __counter_t, __sampler_t, long flags);

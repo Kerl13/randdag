@@ -44,10 +44,11 @@ static mpz_t *_doag_count(memo_t memo, int n, int m, int k, int bound) {
    * vertex. */
   assert(n - k <= m && m <= C * (C - 1) / 2 + (n - C) * C);
 
-  /* Small cases */
   if (n <= 1) {
+    /* Base cases */
     return memo.one;
   } else {
+    /* General case */
     int p, i;
     mpz_t factor;
     mpz_t *res = memo_get_ptr(memo, n, m, k);

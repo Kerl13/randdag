@@ -73,33 +73,31 @@ static char *mygetline(size_t *n, FILE *stream) {
 /* Generic commands */
 
 static int generic_sampler(const char *filename, memo_t memo,
-                           __sampler_t sampler, long flags, int M) {
+                           __sampler_t sampler, long flags, int n, int m,
+                           int bound) {
   FILE *ofile;
   gmp_randstate_t state;
   unsigned long int seed;
   randdag_t g;
 
-  /* FIXME: rewrite this to handle two arguments: N and M */
-  return EXIT_FAILURE;
-
-  /* Setup output file */
+  /* Open the output file. */
   ofile = (strcmp("-", filename) == 0) ? stdout : fopen(filename, "w");
   if (ofile == NULL) {
     fprintf(stderr, "Cannot open file: %s\n", filename);
     return EXIT_FAILURE;
   }
 
-  /* Prepare RNG */
+  /* Prepare the RNG */
   gmp_randinit_mt(state);
   getrandom(&seed, sizeof(unsigned long int), 0); /* XXX. Linux only */
-  printf("Using random seed 0x%lx\n", seed);
+  fprintf(stderr, "Using random seed 0x%lx\n", seed);
   gmp_randseed_ui(state, seed);
 
-  /* Sample */
-  g = sampler(state, memo, M);
+  /* Call the sampler. */
+  g = sampler(state, memo, n, m, bound);
   randdag_to_dot(ofile, g, flags);
 
-  /* Do some cleanups */
+  /* Do some cleanups. */
   if (ofile != stdout)
     fclose(ofile);
   randdag_free(g);
@@ -182,10 +180,12 @@ static int cli_parse(int argc, char *argv[], cli_options *opts) {
 
   /* Counting and sampling. */
   argtable[4] = count = arg_litn(
-      "c", "count", 0, 1, "count DAGs with up to N vertices and M edges");
-  argtable[5] = sample =
-      arg_filen("s", "sample", "<file>", 0, 1,
-                "write a uniform DAG with N vertices to <file>");
+      /* FIXME: use the name DOAG/LDAG here. */
+      "c", "count", 0, 1, "Count graphs with up to N vertices and M edges");
+  argtable[5] = sample = arg_filen("s", "sample", "<file>", 0, 1,
+                                   /* FIXME: use the name DOAG/LDAG here. */
+                                   "write a uniform graph with N vertices "
+                                   "(and, if specified, M edges) to <file>");
 
   /* Memoisation table management. */
   argtable[6] = dump =
@@ -222,13 +222,7 @@ static int cli_parse(int argc, char *argv[], cli_options *opts) {
     goto exit;
   }
 
-  opts->M = (arg_M->count > 0) ? arg_M->ival[0] : (opts->N * (opts->N - 1)) / 2;
-  if (opts->M < 0) {
-    fprintf(stderr, "[-m|--edges] expects a non-negative integer.\n");
-    exitcode = EXIT_FAILURE;
-    goto exit;
-  }
-
+  opts->M = (arg_M->count > 0) ? arg_M->ival[0] : -1;
   opts->bound = (arg_B->count > 0) ? arg_B->ival[0] : -1;
 
   /* Store the other flags and filenames. */
@@ -277,20 +271,34 @@ int run_cli(int argc, char *argv[], __counter_t counter, __sampler_t sampler,
     }
 
     /* Allocate enough space for our  */
-    memo = memo_alloc(max(opts.N, file_N), max(opts.M, file_M),
-                      opts.bound < 0 ? max(opts.N, file_N)
-                                     : max(opts.bound, file_bound));
+    {
+      const int N = max(opts.N, file_N);
+      const int bound = opts.bound < 0 ? N : max(opts.bound, file_bound);
+      const int C = min(N - 1, bound);
+      const int M = opts.M < 0 ? max(file_M, (C * (C - 1)) / 2 + C * (N - C))
+                               : max(opts.M, file_M);
+      memo = memo_alloc(N, M, bound);
+    }
 
     /* Parse the rest of the file. */
     memo_load(memo, fd);
 
     fclose(fd);
   } else {
-    memo = memo_alloc(opts.N, opts.M, opts.bound < 0 ? opts.N : opts.bound);
+    const int C = min(opts.N - 1, (opts.bound < 0 ? opts.N : opts.bound));
+    const int M = opts.M < 0 ? (C * (C - 1)) / 2 + C * (opts.N - C) : opts.M;
+    memo = memo_alloc(opts.N, M, opts.bound);
   }
 
   /* Count. */
-  generic_counter(counter, memo, opts.N, opts.M, opts.bound);
+  if (opts.count) {
+    generic_counter(counter, memo, opts.N, opts.M, opts.bound);
+  }
+
+  if (opts.sample_file) {
+    generic_sampler(opts.sample_file, memo, sampler, flags, opts.N, opts.M,
+                    opts.bound);
+  }
 
   /* Dump the memoisation table if asked to. */
   if (opts.dump_file) {
@@ -301,10 +309,6 @@ int run_cli(int argc, char *argv[], __counter_t counter, __sampler_t sampler,
     }
     memo_dump(fd, memo);
     return 0;
-  }
-
-  if (opts.sample_file) {
-    generic_sampler(opts.sample_file, memo, sampler, flags, opts.N);
   }
 
   return 0;

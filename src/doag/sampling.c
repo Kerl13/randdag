@@ -60,102 +60,173 @@ static void _add_src(gmp_randstate_t state, randdag_vertex *dest,
 }
 
 /* Core of the recursive method: uniform DOAG of parameters n, m, k */
-static void _unif_doag(gmp_randstate_t state, const memo_t memo,
+/* FIXME: this function wastes a lot of random bits, we should draw the rank
+ * only once and do unranking. */
+static void _doag_unif(gmp_randstate_t state, const memo_t memo,
                        randdag_vertex *v, int n, int m, int k, int bound) {
-  mpz_t r, factor;
-  int p, s;
+  mpz_t rank, factor;
+  int p, i;
+  const int C = min(bound, n - k);
 
+  /* These invariants MUST HOLD, otherwise the behaviour of this function is
+   * undefined. They correspond to the conditions under which there is at least
+   * one DOAG with parameters (n, m, k, bound). */
+
+  /* Negative parameters are absurd. */
+  assert(bound >= 0);
+  assert(n >= 0);
+  /* At most n sources and at least one except for the empty graph. */
+  assert((n > 0) <= k && k <= n);
+  /* At least (n-k) edge: one for each internal vertex.
+   * At most one C out-edges per source + max(bound,n-k-i) for the i-th internal
+   * vertex. */
+  assert(n - k <= m && m <= C * (C - 1) / 2 + (n - C) * C);
+
+  /* Base case n=0: the empty graph. */
+  if (n == 0)
+    return;
+
+  /* Base case n=1: only one vertex (the sink). */
   v[0].id = n;
-
-  /* Base case: only one vertex: the sink. */
   if (n == 1) {
     v[0].out_degree = 0;
     v[0].out_edges = NULL;
     return;
   }
 
-  if (n == 2) {
-    /* assert(m == 1); */
-    /* assert(k == 1); */
-    _unif_doag(state, memo, v + 1, 1, 0, 1, bound);
-    v[0].out_degree = 1;
-    v[0].out_edges = calloc(1, sizeof(randdag_vertex));
-    v[0].out_edges[0] = v[1];
-    return;
-  }
-
-  mpz_init(r);
+  mpz_init(rank);
   mpz_init(factor);
-  mpz_urandomm(r, state, *doag_count(memo, n, m, k, bound));
+  mpz_urandomm(rank, state, *doag_count(memo, n, m, k, bound));
 
-  /* p = q + s */
-  for (p = 1; p <= min(n - k, m + 2 - n); p++) {
-    const int s_start = (p == n - k);
-    mpz_set_ui(factor, s_start ? ((n - k - p + s_start) * p) : 1);
-    for (s = s_start; s <= p - (k == 1); s++) {
-      const int q = p - s;
-      const int C2 = min(n - q - k, bound);
-      if (m - p <=
-          (k - 1 + q) * C2 + C2 * (C2 - 1) / 2 + (n - q - k - C2) * bound) {
-        mpz_submul(r, *doag_count(memo, n - 1, m - p, k - 1 + q, bound),
+  for (p = 0; p <= min(C, m); p++) {
+    mpz_set_ui(factor, 1);
+    for (i = 0; i <= min(p - (k == 1), m - n + k); i++) {
+      const int C2 = min(n - k - (p - i), bound);
+      if (m - p <= (C2 * (C2 - 1)) / 2 + C2 * (n - 1 - C2)) {
+        mpz_submul(rank, *doag_count(memo, n - 1, m - p, k - 1 + p - i, bound),
                    factor);
-        if (mpz_sgn(r) == -1) {
-          _unif_doag(state, memo, v + 1, n - 1, m - p, k - 1 + q, bound);
-          _add_src(state, v, v + k + q, n - k - q, s, q);
-          mpz_clear(r);
+        if (mpz_sgn(rank) < 0) {
+          _doag_unif(state, memo, v + 1, n - 1, m - p, k - 1 + p - i, bound);
+          _add_src(state, v, v + k + p - i, n - k - p + i, i, p - i);
+          mpz_clear(rank);
           mpz_clear(factor);
           return;
         }
       }
-      mpz_mul_ui(factor, factor, (n - k - q + 1) * q);
-      mpz_divexact_ui(factor, factor, s + 1);
+      mpz_mul_ui(factor, factor, (n - k - p + i + 1) * (p - i));
+      mpz_divexact_ui(factor, factor, i + 1);
     }
   }
 
-  /* Shouldn't reach this point */
+  /* Reaching this point means that there is a bug in the algorithm. */
   assert(0);
 }
 
-/* --- Recursive method: uniform DOAG with n vertex and m edges ----------- */
+/* --- Recursive method: uniform DOAG with n vertices, m edges, k sources - */
 
-randdag_t doag_unif_nm(gmp_randstate_t state, const memo_t memo, int n, int m,
-                       int bound) {
+randdag_t doag_unif_nmk(gmp_randstate_t state, const memo_t memo, int n, int m,
+                        int k, int bound) {
   randdag_t g = randdag_alloc(n);
-  if (bound <= 0)
-    bound = m; /* The maximum out-degree in the unbounded case is m */
-  _unif_doag(state, memo, g.v, n, m, 1, bound);
+  if (bound < 0)
+    bound = n;
+
+  /* There should exist at least one DOAG with parameters (n,m, k, bound). */
+  if (mpz_sgn(*doag_count(memo, n, m, k, bound)) <= 0) {
+    fprintf(stderr,
+            "Invalid parameters, there is no DOAG with n=%d, m=%d, k=%d, "
+            "bound=%d\n",
+            n, m, k, bound);
+    assert(0);
+  }
+
+  _doag_unif(state, memo, g.v, n, m, k, bound);
   return g;
 }
 
-/* --- Recursive method: uniform DOAG with m edges ------------------------ */
+/* --- Recursive method: uniform DOAG with n vertices and m edges --------- */
 
-randdag_t doag_unif_m(gmp_randstate_t state, const memo_t memo, int m,
-                      int bound) {
-  int n;
-  mpz_t r, tot;
-  mpz_inits(r, tot, NULL);
+randdag_t doag_unif_nm(gmp_randstate_t state, const memo_t memo, int n, int m,
+                       int bound) {
+  int k;
+  mpz_t sum, rank;
+  randdag_t g = randdag_alloc(n);
 
-  if (bound <= 0)
-    bound = m; /* The maximum out-degree in the unbounded case is m */
+  if (bound < 0)
+    bound = n;
 
-  for (n = 2; n <= m + 1; n++) {
-    if (m <= n * (n - 1) / 2)
-      mpz_add(tot, tot, *doag_count(memo, n, m, 1, bound));
+  /* 1. Count the DOAGs with n vertices and m edges. */
+  mpz_init(sum);
+  for (k = 0; k <= n; k++) {
+    mpz_add(sum, sum, *doag_count(memo, n, m, k, bound));
   }
-  mpz_urandomm(r, state, tot);
 
-  for (n = 2; n <= m + 1; n++) {
-    if (m <= n * (n - 1) / 2) {
-      mpz_sub(r, r, *doag_count(memo, n, m, 1, bound));
-      if (mpz_sgn(r) == -1) {
-        mpz_clear(r);
-        mpz_clear(tot);
-        return doag_unif_nm(state, memo, n, m, bound);
-      }
+  /* 2. Sanity check: there should exist a DOAG with parameters (n, m). */
+  if (mpz_sgn(sum) <= 0) {
+    fprintf(stderr,
+            "Invalid parameters, there is no DOAG with n=%d, m=%d, bound=%d\n",
+            n, m, bound);
+    assert(0);
+  }
+
+  /* 3. Select the number of sources. */
+  mpz_init(rank);
+  mpz_urandomm(rank, state, sum);
+  mpz_clear(sum);
+  for (k = 0; k <= n; k++) {
+    mpz_sub(rank, rank, *doag_count(memo, n, m, k, bound));
+    if (mpz_sgn(rank) < 0) {
+      /* Found, do some cleanups and call the main sampler. */
+      mpz_clear(rank);
+      _doag_unif(state, memo, g.v, n, m, k, bound);
+      return g;
     }
   }
 
-  /* Shouldn't reach this point */
+  /* Reaching this point means there is a bug in the selection algorithm. */
+  assert(0);
+}
+
+/* --- Recursive method: uniform DOAG with n vertices and k sources ------- */
+
+randdag_t doag_unif_nk(gmp_randstate_t state, const memo_t memo, int n, int k,
+                       int bound) {
+  int m, C;
+  mpz_t rank, sum;
+  randdag_t g = randdag_alloc(n);
+
+  if (bound < 0)
+    bound = n;
+  C = min(n - k, bound);
+
+  /* 1. Count the DOAGs with n vertices and k sources. */
+  mpz_init(sum);
+  for (m = n - k; m <= (C * (C - 1)) / 2 + C * (n - C); m++) {
+    mpz_add(sum, sum, *doag_count(memo, n, m, k, bound));
+  }
+
+  /* 2. Sanity check: there should exist a DOAG with parameters (n, k). */
+  if (mpz_sgn(sum) <= 0) {
+    fprintf(stderr,
+            "Invalid parameters, there is no DOAG with n=%d, k=%d, bound=%d\n",
+            n, k, bound);
+    assert(0);
+  }
+
+  /* 3. Select the number of edges. */
+  mpz_init(rank);
+  mpz_urandomm(rank, state, sum);
+  mpz_clear(sum);
+  for (m = n - k; m <= (C * (C - 1)) / 2 + C * (n - C); m++) {
+    mpz_sub(rank, rank, *doag_count(memo, n, m, k, bound));
+    if (mpz_sgn(rank) < 0) {
+      /* Found, do some cleanups and call the main sampler. */
+      mpz_clear(rank);
+      _doag_unif(state, memo, g.v, n, m, k, bound);
+      return g;
+    }
+  }
+
+  /* Reaching this point means that there is a bug in the algorithm. */
   assert(0);
 }
 
@@ -174,8 +245,8 @@ static int bern_inv_p_fact(gmp_randstate_t state, int p) {
 
 /** Poisson random variable of parameter 1 constrained to be < n.
  * Return 0 <= k < n with probability proportional to 1/k!
- * This is Knuth's poisson generator [1] + a rejection procedure when the result
- * is larger than n.
+ * This is Knuth's poisson generator [1] + a rejection procedure when the
+ * result is larger than n.
  *
  * [1] https://en.wikipedia.org/wiki/Poisson_distribution#Computational_methods
  */
@@ -207,8 +278,8 @@ static int bounded_poisson(gmp_randstate_t state, int n) {
  * Take two adjacent arrays of vertices, perform a uniform permutation of the
  * second array, and perform a uniform shuffling of the first array with the
  * permuted one.
- * The permutation and shuffling algorithms are intertwined so that they can be
- * efficiently implemented in place.
+ * The permutation and shuffling algorithms are intertwined so that they can
+ * be efficiently implemented in place.
  * - `n` is the cumulated sizes of both arrays.
  * - `k` is the size of the first array. */
 static void permut_shuffle(gmp_randstate_t state, randdag_vertex *v, int n,
@@ -226,9 +297,9 @@ static void permut_shuffle(gmp_randstate_t state, randdag_vertex *v, int n,
       k--;
     } else {
       /* Take a uniform element of the right array and put it at the top.
-       * The value of `r` can be used as our uniform index since, in this branch
-       * of the if, it is a uniform integer from [0; n[ constrained to be >= k
-       * i.e. a uniform integer from [k; n[. */
+       * The value of `r` can be used as our uniform index since, in this
+       * branch of the if, it is a uniform integer from [0; n[ constrained to
+       * be >= k i.e. a uniform integer from [k; n[. */
       v[n - 1] = v[r];
       v[r] = tmp;
     }
@@ -236,9 +307,9 @@ static void permut_shuffle(gmp_randstate_t state, randdag_vertex *v, int n,
   }
 }
 
-/** Simulate the generation of a uniform matrix of variations, but computes just
- * enough information to know it should be rejected or if it corresponds to a
- * valid labelled transition matrix of DOAG. */
+/** Simulate the generation of a uniform matrix of variations, but computes
+ * just enough information to know it should be rejected or if it corresponds
+ * to a valid labelled transition matrix of DOAG. */
 static int doag_unif_n_sim(gmp_randstate_t state, randdag_t *g, int n,
                            int *nb_zeros, int *nb_unknown, int *path) {
   int i, j, streak;
