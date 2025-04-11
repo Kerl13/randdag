@@ -19,51 +19,102 @@
 #include <malloc.h>
 #include <stdio.h>
 
+#include <assert.h>
+
 #include "../../includes/doag.h"
 
 #define min(x, y) (((x) < (y)) ? (x) : (y))
+#define IMPLIES(A, B) (!(A)) || (B)
 
 static mpz_t *_doag_count(memo_t memo, int n, int m, int k, int bound) {
   const int C = min(bound, n - k);
-  /* assert(k >= 1); */
-  /* assert(n == 1 || k < n); */
-  /* assert(n - 1 <= m); */
-  /* assert(m <= k * C + C * (C - 1) / 2 + (n - k - C) * bound); */
 
-  if (n <= 2) {
-    /* assert(k == 1); */
-    /* assert(m == n - 1); */
+  /* As an optimisation, we try very hard to call this function only for
+   * arguments such that DOAG(n,m,k,bound) > 0. Using various
+   * combinatorial arguments, we get the following conditions on (n,m,k,bound).
+   * They are expressed as asserts for easier debugging. */
+
+  /* Negative parameters are absurd. */
+  assert(bound >= 0);
+  assert(n >= 0);
+  /* At most n sources and at least one except for the empty graph. */
+  assert((n > 0) <= k && k <= n);
+  /* At least (n-k) edge: one for each internal vertex.
+   * At most one C out-edges per source + max(bound,n-k-i) for the i-th internal
+   * vertex. */
+  assert(n - k <= m && m <= C * (C - 1) / 2 + (n - C) * C);
+
+  /* Small cases */
+  if (n <= 1) {
     return memo.one;
   } else {
-    int p, s;
+    int p, i;
+    mpz_t factor;
     mpz_t *res = memo_get_ptr(memo, n, m, k);
-    if (mpz_sgn(*res) == 0) {
-      const int max_p = min(C, m + 2 - n);
-      mpz_t factor;
-      mpz_init(factor);
-      /* p = q + s */
-      for (p = 1; p <= max_p; p++) {
-        const int s_start = (p == n - k);
-        mpz_set_ui(factor, s_start ? ((n - k - p + s_start) * p) : 1);
-        for (s = s_start; s <= p - (k == 1); s++) {
-          const int q = p - s;
-          const int C2 = min(n - q - k, bound);
-          if (m - p <=
-              (k - 1 + q) * C2 + C2 * (C2 - 1) / 2 + (n - q - k - C2) * bound)
-            mpz_addmul(*res, *_doag_count(memo, n - 1, m - p, k - 1 + q, bound),
-                       factor);
-          mpz_mul_ui(factor, factor, (n - k - q + 1) * q);
-          mpz_divexact_ui(factor, factor, s + 1);
+
+    /* Memoisation. */
+    if (mpz_sgn(*res) != 0)
+      return res;
+
+    mpz_init(factor);
+
+    /* For the invariant to hold recursively, we must have:
+       1. Condition on the number of sources:
+          1 <= k - 1 + p - i <= n - 1, which is equivalent to
+          p - (n-k) <= i <= p + (k-2)
+       2. Condition on the number of edges:
+          n - k - p + i <= m - p <= C2(C2 - 1)/2 + C2(n - 1 - C2)
+          with C2 = min(bound, n - k - (p - i))
+       In addition, by definition we have 0 <= i <= p.
+
+       It follows that
+           max(0, p - (n-k)) = 0 <= i
+       and
+           i <= min(p, p + k - 2, m - n + k) = min(p - indic(k==1), m-n+k)
+       */
+    for (p = 0; p <= min(C, m); p++) {
+      mpz_set_ui(factor, 1);
+      for (i = 0; i <= min(p - (k == 1), m - n + k); i++) {
+        /* Loop invariant: factor = binom(n-k-p+i,i) * p! / (p-i)! */
+        const int C2 = min(n - k - (p - i), bound);
+        if (m - p <= (C2 * (C2 - 1)) / 2 + C2 * (n - 1 - C2)) {
+          mpz_addmul(*res,
+                     *_doag_count(memo, n - 1, m - p, k - 1 + p - i, bound),
+                     factor);
         }
+        mpz_mul_ui(factor, factor, (n - k - p + i + 1) * (p - i));
+        mpz_divexact_ui(factor, factor, i + 1);
       }
-      mpz_clear(factor);
     }
+    mpz_clear(factor);
+
+    if (mpz_sgn(*res) == 0)
+      fprintf(stderr, "[ERROR] DOAG n=%d m=%d k=%d   -> 0\n", n, m, k);
+    assert(mpz_sgn(*res) > 0);
+
     return res;
   }
 }
 
-mpz_t *doag_count(memo_t memo, int n, int m, int k, int bound) {
-  if (bound <= 0)
+mpz_t *doag_unsafe_count(memo_t memo, int n, int m, int k, int bound) {
+  if (bound < 0)
     bound = n;
+  return _doag_count(memo, n, m, k, bound);
+}
+
+mpz_t *doag_count(memo_t memo, int n, int m, int k, int bound) {
+  int C;
+
+  if (bound < 0)
+    bound = n;
+
+  C = min(bound, n - k);
+  /* Se the comment at the top of _doag_count for the explanations on each of
+   * these conditions. */
+  if ((n < 0) || ((n > 0) > k) || (k > n) || (n - k > m) ||
+      (m > C * (C - 1) / 2 + (n - C) * C)) {
+    return memo.zero;
+  }
+
   return _doag_count(memo, n, m, k, bound);
 }

@@ -29,8 +29,18 @@
  * The `memo` argument is a memoisation structure (\ref memo_t) and it must have
  * enough space for storing the result of this function, i.e. its `N`, `M`, and
  * `bound` fields must be respectively larger or equal to `n`, `m`, and `bound`.
- * */
+ */
 mpz_t *doag_count(memo_t, int n, int m, int k, int bound);
+
+/**
+ * Same as \ref doag_count but assumes that there exists at least one DOAG with
+ * `n` vertices, `m` edges, `k` sources, and with out-degree at most `bound`.
+ * that there exists. If it is not the case, the result is unspecified.
+ *
+ * In practice, this function skips a check and may perform an invalid array
+ * access in the memoisation table if the above condition does not hold.
+ */
+mpz_t *doag_unsafe_count(memo_t, int n, int m, int k, int bound);
 
 /**
  * Return a uniform DOAG with:
