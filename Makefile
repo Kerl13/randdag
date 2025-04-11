@@ -21,7 +21,7 @@ doc:
 	@echo Documentation generated at $(BUILD)doc/html/index.html
 	@echo ----------------------------------------------------
 
-test: doag-tests
+test: doag-tests ldag-tests
 
 clean:
 	rm -rf $(BUILD)
@@ -33,3 +33,4 @@ include src/doag/doag.mk
 include src/ldag/ldag.mk
 
 include tests/doag/build.mk
+include tests/ldag/build.mk

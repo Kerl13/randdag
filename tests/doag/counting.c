@@ -11,7 +11,7 @@
 static void count_any_k(memo_t memo, mpz_t res, int n, int m) {
   int k;
   mpz_set_ui(res, 0);
-  for (k = 1; k <= n; ++k)
+  for (k = 0; k <= n; ++k)
     mpz_add(res, res, *doag_count(memo, n, m, k, -1 /* unbounded */));
 }
 
