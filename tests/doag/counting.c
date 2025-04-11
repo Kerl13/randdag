@@ -12,7 +12,7 @@ static void count_any_k(memo_t memo, mpz_t res, int n, int m) {
   int k;
   mpz_set_ui(res, 0);
   for (k = 1; k <= n; ++k)
-    mpz_add(res, res, *doag_count(memo, n, m, k, 0));
+    mpz_add(res, res, *doag_count(memo, n, m, k, -1 /* unbounded */));
 }
 
 static int one_test(memo_t memo, mpz_t x, int n, int m, int expected) {
