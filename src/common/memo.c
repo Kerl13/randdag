@@ -86,14 +86,12 @@ void memo_free(memo_t memo) {
 
 void memo_dump(FILE *fd, const memo_t memo) {
   int n, m, k;
-  const int M = memo.M;
-  const int bound = memo.bound;
-  fprintf(fd, "%d %d %d\n", memo.N, M, bound);
+  fprintf(fd, "%d %d %d\n", memo.N, memo.M, memo.bound);
 
   for (n = 2; n <= memo.N; n++) {
     for (k = 1; k <= n; k++) {
-      const int C = min(n - k, bound);
-      const int max_m = min((C - 1) * C / 2 + C * (n - C), M);
+      const int C = min(n - k, memo.bound);
+      const int max_m = min((C - 1) * C / 2 + C * (n - C), memo.M);
       for (m = 0; m <= max_m; m++) {
         mpz_t *x = memo_get_ptr(memo, n, m, k);
         if (mpz_sgn(*x) > 0) {

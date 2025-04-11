@@ -20,27 +20,12 @@
 #include "../../includes/doag.h"
 #include "../common/cli.h"
 
-mpz_t zero;
-
-/* TODO: make this a cmd line argument. */
-int bound = -1;
-
 static randdag_t doag_sampler(gmp_randstate_t state, memo_t memo, int M) {
+  /* FIXME: make this a cmd line argument. */
+  const int bound = 0;
   return doag_unif_m(state, memo, M, bound);
 }
 
-static mpz_t *doag_counter(memo_t memo, int n, int m) {
-  const int C = (bound < n) ? bound : n - 1;
-  if (m <= (C + 1) * C / 2 + (n - 1 - C) * bound)
-    return doag_count(memo, n, m, 1, bound);
-  else
-    return &zero;
-}
-
 int main(int argc, char *argv[]) {
-  int exitcode;
-  mpz_init(zero);
-  exitcode = run_cli(argc, argv, doag_counter, doag_sampler, RD_DOT_ORDERING);
-  mpz_clear(zero);
-  return exitcode;
+  return run_cli(argc, argv, doag_count, doag_sampler, RD_DOT_ORDERING);
 }
