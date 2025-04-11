@@ -20,23 +20,18 @@
 #include "../../includes/ldag.h"
 #include "../common/cli.h"
 
-mpz_t zero;
-
 static randdag_t sampler(gmp_randstate_t s, memo_t memo, int m) {
   return ldag_unif_m(s, memo, m);
 }
 
-static mpz_t *counter(memo_t memo, int n, int m) {
-  if (m <= n * (n - 1) / 2)
-    return ldag_count(memo, n, m, 1);
+static mpz_t *counter(memo_t memo, int n, int m, int k, int bound) {
+  (void)bound; /* FIXME: implement bounded dag counting. */
+  if (n - k <= m && k * (n - k) + ((n - k) * (n - k - 1)) / 2)
+    return ldag_count(memo, n, m, k);
   else
-    return &zero;
+    return memo.zero;
 }
 
 int main(int argc, char *argv[]) {
-  int exitcode;
-  mpz_init(zero);
-  exitcode = run_cli(argc, argv, counter, sampler, RD_DOT_LABELLED);
-  mpz_clear(zero);
-  return exitcode;
+  return run_cli(argc, argv, counter, sampler, RD_DOT_LABELLED);
 }
