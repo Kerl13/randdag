@@ -20,8 +20,11 @@
 #include "../../includes/ldag.h"
 #include "../common/cli.h"
 
-static randdag_t sampler(gmp_randstate_t s, memo_t memo, int m) {
-  return ldag_unif_m(s, memo, m);
+static randdag_t sampler(gmp_randstate_t state, memo_t memo, int n, int m,
+                         int bound) {
+  if (m >= 0)
+    return ldag_unif_nm(state, memo, n, m, bound);
+  return ldag_unif_n(state, memo, n, bound);
 }
 
 int main(int argc, char *argv[]) {
