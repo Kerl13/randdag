@@ -86,7 +86,7 @@ static void _doag_unif(gmp_randstate_t state, const memo_t memo,
   if (n == 0)
     return;
 
-  /* Base case n=1: only one vertex (the sink). */
+  /* Base case n=1: only one vertex. */
   v[0].id = n;
   if (n == 1) {
     v[0].out_degree = 0;
@@ -94,6 +94,7 @@ static void _doag_unif(gmp_randstate_t state, const memo_t memo,
     return;
   }
 
+  /* Draw a uniform rank. */
   mpz_init(rank);
   mpz_init(factor);
   mpz_urandomm(rank, state, *doag_count(memo, n, m, k, bound));
