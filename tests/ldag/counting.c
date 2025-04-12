@@ -19,7 +19,8 @@ static int one_test(memo_t memo, mpz_t x, int n, int m, int expected) {
   count_any_k(memo, x, n, m);
 
   if (mpz_cmp_ui(x, expected) != 0) {
-    fprintf(stderr, "[ERROR] ldag_count(<memo>, %d, %d, *, 0) returned ", n, m);
+    fprintf(stderr, "[ERROR] ldag_count(<memo>, %d, %d, *, -1) returned ", n,
+            m);
     mpz_out_str(stderr, 10, x);
     fprintf(stderr, " instead of %d\n", expected);
     return 1;
@@ -32,7 +33,7 @@ static int small_cases() {
   mpz_t x;
   memo_t memo;
 
-  memo = memo_alloc(6, 15, 0);
+  memo = memo_alloc(6, 15, -1);
   mpz_init(x);
 
   /* Test the counting function on known small values. */
