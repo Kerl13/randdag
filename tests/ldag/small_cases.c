@@ -94,6 +94,6 @@ static int small_cases() {
 int main() {
   int error;
   error = small_cases();
-  fprintf(stderr, "TEST small cases: %s\n", error ? "FAILED" : "OK");
+  fprintf(stderr, "TEST (n,m)-small cases: %s\n", error ? "FAILED" : "OK");
   return error;
 }
