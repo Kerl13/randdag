@@ -17,13 +17,16 @@ LDFLAGS = -L../build
 
 DEPS = ../build/libdoag.a utils.c utils.h
 
-all: doag_n.exe doag_count.exe
+all: doag_n.exe doag_count.exe random_doag_nm1.exe
 
 doag_n.exe: doag_n.c $(DEPS)
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ doag_n.c utils.c -ldoag -lgmp
 
 doag_count.exe: doag_count.c $(DEPS)
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ doag_count.c utils.c -ldoag -lgmp
+
+random_doag_nm1.exe: random_doag_nm1.c $(DEPS)
+	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ random_doag_nm1.c utils.c -ldoag -lgmp
 
 clean:
 	rm -rf *.exe

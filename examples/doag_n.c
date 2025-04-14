@@ -1,6 +1,7 @@
+#include <stdio.h>
+
 #include "utils.h"
 #include <gmp.h>
-#include <stdio.h>
 
 #include "../includes/doag.h"
 
@@ -16,9 +17,9 @@
  * (in graphviz' dot format).
  * You can visualise the result by running `dot -Tpdf doag.dot -o doag.pdf`.
  *
- * NB. utils.c handles boring command line parsing stuff and is only here to
- * allow you to play the executable. You should drop it and replace the
- * `parse_one_int` call below with something more appropriate in your own code.
+ * NB. utils.c contains the boilerplate command line parsing code for our
+ * examples so that this file contains only the relevant part of the
+ * demonstration on how to use the libraries.
  */
 
 const char *usage_string = "USAGE: %s N\nSamples a DOAG of size N.\n";

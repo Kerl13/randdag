@@ -20,10 +20,9 @@
  *   part of the 10 vertices);
  * - some other relevant values.
  *
- * NB. utils.c handles boring command line parsing stuff and is only here to
- * allow you to play the executable. You should drop it and replace the
- * `parse_three_ints` call below with something more appropriate in your own
- * code.
+ * NB. utils.c contains the boilerplate command line parsing code for our
+ * examples so that this file contains only the relevant part of the
+ * demonstration on how to use the libraries.
  */
 
 const char *usage_string = "USAGE: %s N M K\nComputes the number of DOAGs with "
