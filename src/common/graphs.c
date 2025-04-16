@@ -46,7 +46,7 @@ void randdag_to_dot(FILE *fd, const randdag_t g, unsigned int flags) {
   fprintf(fd, "  edge [arrowhead=none, penwidth=2]\n");
   if (!(flags & RD_DOT_LABELLED)) {
     fprintf(fd, "  node [shape=circle, label=\"\", color=black, style=filled, "
-                "width=1.5]\n");
+                "width=.5]\n");
   }
 
   for (i = 0; i < g.N; i++) {
